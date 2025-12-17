@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Monitor Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #222; --card: #333; --text: #fff; --primary: #1a237e; --gold: #c5a47e; --green: #27ae60; --gray: #555; }
+        body { font-family: 'Prompt', sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
+        
+        header { border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { margin: 0; color: var(--gold); }
+        
+        .bill-box { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .bill-card { background: #f39c12; color: #000; padding: 10px 20px; border-radius: 50px; font-weight: bold; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% {transform:scale(1);} 50% {transform:scale(1.05);} 100% {transform:scale(1);} }
+
+        /* Order Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        
+        .card { 
+            background: var(--card); border-radius: 10px; overflow: hidden; 
+            border: 1px solid #444; display: flex; flex-direction: column; 
+            transition: 0.3s; position: relative;
+        }
+        
+        /* การ์ดที่ทำเสร็จครบทุกรายการแล้ว */
+        .card.all-done { border: 2px solid var(--green); }
+        .card.all-done .head { background: var(--green); }
+
+        .head { background: var(--primary); padding: 10px; display: flex; justify-content: space-between; font-weight: bold; }
+        .body { padding: 15px; flex: 1; }
+        
+        /* Item Styles */
+        .item { 
+            display: flex; align-items: center; justify-content: space-between; 
+            border-bottom: 1px dashed #555; padding: 8px 0; cursor: pointer; user-select: none;
+        }
+        .item:hover { background: #3a3a3a; }
+        
+        .item.done { text-decoration: line-through; color: #777; }
+        .item.done .checkbox { background: var(--green); border-color: var(--green); }
+        
+        .checkbox {
+            width: 20px; height: 20px; border: 2px solid #777; border-radius: 5px; margin-right: 10px;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .checkbox::after { content: '✔'; color: white; font-size: 12px; display: none; }
+        .item.done .checkbox::after { display: block; }
+
+        .btn-footer { padding: 10px; text-align: center; background: #2a2a2a; border-top: 1px solid #444; }
+        .status-text { font-size: 0.9rem; color: #aaa; }
+        
+        button.btn-serve {
+            background: var(--green); color: white; border: none; width: 100%; padding: 10px;
+            cursor: pointer; font-weight: bold; border-radius: 5px; font-size: 1rem;
+        }
+        button.btn-serve:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>👨‍🍳 Kitchen Station (Online)</h1>
+        <div id="clock">00:00</div>
+    </header>
+
+    <div id="bill-area" class="bill-box"></div>
+    <div id="order-area" class="grid">
+        <p style="color:#777; text-align:center; width:100%;">กำลังเชื่อมต่อระบบ...</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // --- 1. ใส่ Config ของคุณตรงนี้ (เหมือนไฟล์อื่น) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDk4aCo5QjHesgZEfdUJ8aoSTMQv7W5vUQ",
+            authDomain: "restaurant-menu-af41d.firebaseapp.com",
+            databaseURL: "https://restaurant-menu-af41d-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "restaurant-menu-af41d",
+            storageBucket: "restaurant-menu-af41d.firebasestorage.app",
+            messagingSenderId: "110746441918",
+            appId: "1:110746441918:web:5bc38b6b758b488d9f66ef"
+            };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Clock
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
+
+        // --- 2. ฟังข้อมูลจาก Firebase (Realtime) ---
+        let ordersData = [];
+        let billsData = [];
+
+        onValue(ref(db, 'orders'), (snapshot) => {
+            const data = snapshot.val();
+            // แปลง Object เป็น Array
+            ordersData = data ? Object.entries(data).map(([key, val]) => ({ firebaseKey: key, ...val })) : [];
+            render();
+        });
+
+        onValue(ref(db, 'bills'), (snapshot) => {
+            const data = snapshot.val();
+            billsData = data ? Object.values(data) : [];
+            render();
+        });
+
+        function render() {
+            // 1. Render Bills
+            const billDiv = document.getElementById('bill-area');
+            billDiv.innerHTML = billsData.map(b => `<div class="bill-card">💰 โต๊ะ ${b.table} เช็คบิล</div>`).join('');
+
+            // 2. Render Orders (เฉพาะที่ยังไม่ served)
+            const activeOrders = ordersData.filter(o => o.status !== 'served');
+            const orderDiv = document.getElementById('order-area');
+
+            if(activeOrders.length === 0) {
+                orderDiv.innerHTML = '<p style="color:#777; text-align:center; width:100%;">ไม่มีออเดอร์ใหม่</p>';
+                return;
+            }
+
+            // เรียงตามเวลา (มาก่อนอยู่หน้า)
+            activeOrders.sort((a,b) => a.id - b.id);
+
+            orderDiv.innerHTML = activeOrders.map(o => {
+                // เช็คว่ารายการย่อยเสร็จหมดหรือยัง
+                const items = o.items || [];
+                const allDone = items.every(i => i.done);
+                const cardClass = allDone ? 'all-done' : '';
+                const statusText = allDone ? '✅ พร้อมเสิร์ฟ' : '⏳ กำลังปรุง';
+
+                const itemsHtml = items.map((item, idx) => {
+                    const isDone = item.done ? 'done' : '';
+                    return `
+                        <div class="item ${isDone}" onclick="toggleItem('${o.firebaseKey}', ${idx}, ${!item.done})">
+                            <div style="display:flex; align-items:center;">
+                                <div class="checkbox"></div>
+                                <span>${item.name}</span>
+                            </div>
+                            <span>x1</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const footerHtml = allDone 
+                    ? `<button class="btn-serve" onclick="markServed('${o.firebaseKey}')">🚀 ส่งอาหารครบแล้ว</button>`
+                    : `<div class="status-text">${statusText}</div>`;
+
+                return `
+                    <div class="card ${cardClass}">
+                        <div class="head"><span>โต๊ะ ${o.table}</span><span>${o.timestamp}</span></div>
+                        <div class="body">${itemsHtml}</div>
+                        <div class="btn-footer">${footerHtml}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- 3. ฟังก์ชันอัปเดตข้อมูลกลับไปที่ Firebase ---
+        
+        // ทำให้ฟังก์ชันเรียกผ่าน HTML onclick ได้
+        window.toggleItem = function(orderKey, itemIndex, newStatus) {
+            // อัปเดตเฉพาะรายการย่อยนั้นๆ ใน Firebase
+            // Path: orders / orderKey / items / itemIndex / done
+            const updates = {};
+            updates[`orders/${orderKey}/items/${itemIndex}/done`] = newStatus;
+            
+            update(ref(db), updates);
+        }
+
+        window.markServed = function(orderKey) {
+            if(confirm("ยืนยันส่งอาหารครบทุกรายการ?")) {
+                update(ref(db, `orders/${orderKey}`), { status: 'served' });
+            }
+        }
+
+    </script>
+</body>
+</html>
