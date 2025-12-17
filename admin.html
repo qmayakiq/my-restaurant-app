@@ -17,77 +17,113 @@
         body { font-family: 'Prompt', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
         * { box-sizing: border-box; }
 
-        h1 { text-align: center; color: var(--primary); margin-bottom: 20px; }
-        
+        /* Header & Admin Button */
+        .header-wrap { position: relative; margin-bottom: 20px; text-align: center; }
+        h1 { color: var(--primary); font-size: 1.8rem; margin: 0; }
+        .admin-trigger {
+            position: absolute; top: 0; right: 0;
+            background: none; border: none; font-size: 1.5rem; color: #ccc; cursor: pointer;
+            padding: 5px; transition: 0.3s;
+        }
+        .admin-trigger:hover, .admin-active { color: var(--primary); transform: rotate(90deg); }
+
+        /* Tabs (Default Hidden for Admin) */
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
         .tab-btn {
             background: white; border: 1px solid var(--primary); color: var(--primary);
-            padding: 10px 25px; border-radius: 50px; cursor: pointer; transition: 0.3s;
-            font-size: 1rem; font-weight: 500; display: flex; align-items: center; gap: 8px;
+            padding: 10px 20px; border-radius: 50px; cursor: pointer; transition: 0.3s;
+            font-size: 1rem; font-weight: 500; display: flex; align-items: center; gap: 8px; white-space: nowrap;
         }
         .tab-btn:hover, .tab-btn.active {
             background: var(--primary); color: var(--gold); border-color: var(--primary);
             box-shadow: 0 4px 10px rgba(26,35,126,0.3); transform: translateY(-2px);
         }
+        
+        /* ซ่อนแท็บ Admin โดยเริ่มต้น */
+        .admin-only-tab { display: none; } 
 
+        /* ... (CSS เดิมของ Panel, Table, Grid ยังคงเหมือนเดิม) ... */
         .panel { background: var(--white); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 25px; }
-
-        /* Dashboard */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-        .stat-card { background: white; padding: 20px; border-radius: var(--radius); text-align: center; border-bottom: 4px solid var(--gold); box-shadow: var(--shadow); }
-        .stat-val { font-size: 2rem; font-weight: bold; color: var(--primary); margin: 10px 0; }
-
-        /* Tables Grid */
-        .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .table-card {
-            background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee;
-            border-left: 5px solid var(--primary); cursor: pointer; transition: 0.3s; position: relative;
-        }
-        .table-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-left-color: var(--gold); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-card { background: white; padding: 15px; border-radius: var(--radius); text-align: center; border-bottom: 4px solid var(--gold); box-shadow: var(--shadow); }
+        .stat-val { font-size: 1.8rem; font-weight: bold; color: var(--primary); margin: 5px 0; }
+        .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .table-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; border-left: 5px solid var(--primary); cursor: pointer; transition: 0.3s; position: relative; }
+        .table-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-left-color: var(--gold); }
         .table-alert { animation: pulse 1s infinite; border-left-color: var(--danger) !important; background: #fff5f5; }
         @keyframes pulse { 0%{opacity:1} 50%{opacity:0.8} 100%{opacity:1} }
-
-        /* Cashier */
         .cashier-wrap { display: flex; gap: 20px; }
         .cashier-list { flex: 1; }
-        .receipt { width: 350px; background: #2c3e50; color: white; padding: 25px; border-radius: 12px; display: flex; flex-direction: column; height: fit-content; }
-        .receipt-body { flex: 1; font-family: monospace; margin: 20px 0; border-top: 1px dashed #555; border-bottom: 1px dashed #555; padding: 15px 0; max-height: 400px; overflow-y: auto; }
+        .receipt { width: 320px; background: #2c3e50; color: white; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; height: fit-content; }
+        .receipt-body { flex: 1; font-family: monospace; margin: 15px 0; border-top: 1px dashed #555; border-bottom: 1px dashed #555; padding: 10px 0; max-height: 350px; overflow-y: auto; }
         .btn-pay { background: var(--gold); color: var(--primary); border: none; padding: 12px; width: 100%; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
         .btn-pay:disabled { background: #555; color: #888; cursor: not-allowed; }
-
-        /* Form & Table */
-        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Prompt', sans-serif; }
-        .btn-save { background: linear-gradient(135deg, var(--primary), #283593); color: white; padding: 12px; border: none; width: 100%; border-radius: 50px; cursor: pointer; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Prompt', sans-serif; outline: none; }
+        .btn-save { background: linear-gradient(135deg, var(--primary), #283593); color: white; padding: 12px; border: none; width: 100%; border-radius: 50px; cursor: pointer; font-size: 1rem; }
         .btn-cancel { background: #95a5a6; color: white; padding: 12px; border: none; width: 100%; border-radius: 50px; cursor: pointer; margin-top: 10px; display: none; }
-        
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: var(--primary); color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        .scroll-table { overflow-x: auto; }
-        .btn-icon { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-right: 5px; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { background: var(--primary); color: white; padding: 10px; text-align: left; font-size: 0.9rem; }
+        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .scroll-table, .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; display: block; }
+        .btn-icon { border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 3px; font-size: 0.8rem; }
         .btn-edit { background: #f39c12; color: white; }
         .btn-del { background: #e74c3c; color: white; }
+        .filter-bar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .chart-container { height: 250px; margin-bottom: 30px; position: relative; }
 
-        .filter-bar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
-        .chart-container { height: 300px; margin-bottom: 30px; position: relative; }
+        /* Login Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-box {
+            background: white; padding: 30px; border-radius: var(--radius);
+            width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
 
+        /* Mobile Adjustments */
         @media(max-width: 768px) {
+            body { padding: 10px; background: #eaeff5; }
+            h1 { font-size: 1.4rem; }
+            .tabs { gap: 8px; margin-bottom: 15px; }
+            .tab-btn { padding: 8px 12px; font-size: 0.85rem; flex: 1 1 auto; justify-content: center; }
+            .panel { padding: 15px; margin-bottom: 15px; }
             .cashier-wrap { flex-direction: column; }
-            .receipt { width: 100%; order: -1; }
-            .form-row { flex-direction: column; }
+            .receipt { width: 100%; order: -1; margin-bottom: 15px; }
+            .form-row { flex-direction: column; gap: 10px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-card:last-child { grid-column: 1 / -1; }
+            #tab-hist > .panel > div[style*="grid"] { grid-template-columns: 1fr !important; }
+            th, td { padding: 8px; font-size: 0.85rem; white-space: nowrap; }
+            .filter-bar { justify-content: space-between; }
         }
     </style>
 </head>
 <body>
 
-    <h1>👔 Restaurant Manager Online</h1>
+    <div class="header-wrap">
+        <h1>👔 Restaurant Manager</h1>
+        <button class="admin-trigger" onclick="toggleAdminPanel()">
+            <i class="fa-solid fa-gear" id="gear-icon"></i>
+        </button>
+    </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="go('dash')" id="btn-dash"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด</button>
-        <button class="tab-btn" onclick="go('cashier')" id="btn-cashier"><i class="fa-solid fa-cash-register"></i> แคชเชียร์</button>
-        <button class="tab-btn" onclick="go('menu')" id="btn-menu"><i class="fa-solid fa-burger"></i> จัดการเมนู</button>
-        <button class="tab-btn" onclick="go('hist')" id="btn-hist"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติรายรับ</button>
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-box">
+            <h3 style="color:var(--primary); margin-top:0;">🔒 ยืนยันสิทธิ์ Admin</h3>
+            <input type="password" id="admin-pass" placeholder="กรอกรหัสผ่าน" style="text-align:center; font-size:1.2rem; margin-bottom:15px;" onkeypress="checkEnter(event)">
+            <button class="btn-save" onclick="checkLogin()">เข้าสู่ระบบ</button>
+            <button class="btn-cancel" style="display:block; background:none; color:#777; margin-top:5px;" onclick="closeModal()">ยกเลิก</button>
+        </div>
+    </div>
+
+    <div class="tabs" id="nav-tabs">
+        <button class="tab-btn active" onclick="go('cashier')" id="btn-cashier"><i class="fa-solid fa-cash-register"></i> แคชเชียร์</button>
+        
+        <button class="tab-btn admin-only-tab" onclick="go('dash')" id="btn-dash"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด</button>
+        <button class="tab-btn admin-only-tab" onclick="go('menu')" id="btn-menu"><i class="fa-solid fa-burger"></i> จัดการเมนู</button>
+        <button class="tab-btn admin-only-tab" onclick="go('hist')" id="btn-hist"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติ/สถิติ</button>
     </div>
 
     <div id="tab-dash" class="tab-content">
@@ -204,7 +240,7 @@
             storageBucket: "restaurant-menu-af41d.firebasestorage.app",
             messagingSenderId: "110746441918",
             appId: "1:110746441918:web:5bc38b6b758b488d9f66ef"
-            };
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -219,35 +255,57 @@
         let yearlyChart = null;
         let currentImgBase64 = null;
 
-        // --- 2. LISTEN TO DATA (Realtime) ---
-        onValue(ref(db, 'orders'), (s) => {
-            ordersData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
-            refreshUI();
-        });
-        onValue(ref(db, 'menu'), (s) => {
-            menuData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
-            renderMenu();
-            renderTop10(); // <--- เพิ่มบรรทัดนี้ (เพื่อให้รู้หมวดหมู่สินค้า)
-        });
-        onValue(ref(db, 'sales_history'), (s) => {
-            historyData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
-            renderHist();
-            renderTop10(); // <--- เพิ่มบรรทัดนี้ (เพื่อคำนวณยอดขายใหม่)
-            refreshUI(); 
-        });
-        onValue(ref(db, 'bills'), (s) => {
-            billsData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
-            refreshUI();
-        });
+        // --- ADMIN / LOGIN SYSTEM ---
+        let isAdmin = false;
+        const PASSWORD = "1234"; // รหัสผ่าน
+
+        window.toggleAdminPanel = function() {
+            if (isAdmin) {
+                if(confirm("ออกจากระบบ Admin?")) {
+                    isAdmin = false;
+                    document.querySelectorAll('.admin-only-tab').forEach(el => el.style.display = 'none');
+                    document.getElementById('gear-icon').classList.remove('admin-active');
+                    go('cashier'); 
+                }
+            } else {
+                document.getElementById('login-modal').style.display = 'flex';
+                document.getElementById('admin-pass').value = '';
+                document.getElementById('admin-pass').focus();
+            }
+        }
+
+        window.checkLogin = function() {
+            const input = document.getElementById('admin-pass').value;
+            if (input === PASSWORD) {
+                isAdmin = true;
+                document.querySelectorAll('.admin-only-tab').forEach(el => el.style.display = 'flex');
+                document.getElementById('login-modal').style.display = 'none';
+                document.getElementById('gear-icon').classList.add('admin-active');
+                alert('🔓 ยินดีต้อนรับ Admin');
+            } else {
+                alert('❌ รหัสผ่านไม่ถูกต้อง');
+                document.getElementById('admin-pass').value = '';
+            }
+        }
+
+        window.closeModal = function() {
+            document.getElementById('login-modal').style.display = 'none';
+        }
+
+        window.checkEnter = function(e) {
+            if(e.key === 'Enter') checkLogin();
+        }
 
         // UI Helpers
         window.go = function(id) {
             document.querySelectorAll('.tab-content').forEach(e => e.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
             document.getElementById('tab-'+id).style.display = 'block';
-            document.getElementById('btn-'+id).classList.add('active');
+            const btn = document.getElementById('btn-'+id);
+            if(btn) btn.classList.add('active');
+            
             refreshUI();
-            if(id === 'hist') renderHist(); // Re-render charts
+            if(id === 'hist') renderHist(); 
         }
 
         function refreshUI() {
@@ -257,7 +315,6 @@
 
         // --- DASHBOARD ---
         function renderDash() {
-            // Stats
             const now = new Date();
             const todayStr = now.toLocaleDateString();
             const currentMonth = now.getMonth();
@@ -267,16 +324,20 @@
             let monthSum = 0;
 
             historyData.forEach(h => {
-                const d = new Date(h.timestamp_num || h.id); // รองรับ legacy data
+                const d = new Date(h.timestamp_num || h.id); 
                 if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
                     monthSum += parseInt(h.amount);
                     if (d.toLocaleDateString() === todayStr) todaySum += parseInt(h.amount);
                 }
             });
 
-            document.getElementById('today-sales').innerText = todaySum.toLocaleString() + ' ฿';
-            document.getElementById('month-sales').innerText = monthSum.toLocaleString() + ' ฿';
-            document.getElementById('total-orders').innerText = historyData.length;
+            const elToday = document.getElementById('today-sales');
+            const elMonth = document.getElementById('month-sales');
+            const elTotal = document.getElementById('total-orders');
+
+            if(elToday) elToday.innerText = todaySum.toLocaleString() + ' ฿';
+            if(elMonth) elMonth.innerText = monthSum.toLocaleString() + ' ฿';
+            if(elTotal) elTotal.innerText = historyData.length;
 
             // Active Tables
             const tables = {};
@@ -288,29 +349,34 @@
             billsData.forEach(b => { if(tables[b.table]) tables[b.table].status = 'billing'; });
 
             const div = document.getElementById('dash-tables');
-            div.innerHTML = Object.keys(tables).map(t => {
-                const info = tables[t];
-                const alertClass = info.status === 'billing' ? 'table-alert' : '';
-                const icon = info.allServed ? '✅' : '👨‍🍳';
-                return `
-                    <div class="table-card ${alertClass}" onclick="go('cashier'); selectTable('${t}')">
-                        <div style="position:absolute; top:10px; right:10px;">${icon}</div>
-                        <h3>โต๊ะ ${t}</h3>
-                        <div style="font-size:1.2rem; color:var(--primary); font-weight:bold;">${info.total} ฿</div>
-                        <div style="font-size:0.8rem; color:${info.status==='billing'?'var(--danger)':'var(--success)'}">
-                            ${info.status==='billing' ? '⚠️ เรียกเก็บเงิน' : 'กำลังทาน'}
+            if(div) {
+                div.innerHTML = Object.keys(tables).map(t => {
+                    const info = tables[t];
+                    const alertClass = info.status === 'billing' ? 'table-alert' : '';
+                    const icon = info.allServed ? '✅' : '👨‍🍳';
+                    return `
+                        <div class="table-card ${alertClass}" onclick="go('cashier'); selectTable('${t}')">
+                            <div style="position:absolute; top:10px; right:10px;">${icon}</div>
+                            <h3>โต๊ะ ${t}</h3>
+                            <div style="font-size:1.2rem; color:var(--primary); font-weight:bold;">${info.total} ฿</div>
+                            <div style="font-size:0.8rem; color:${info.status==='billing'?'var(--danger)':'var(--success)'}">
+                                ${info.status==='billing' ? '⚠️ เรียกเก็บเงิน' : 'กำลังทาน'}
+                            </div>
                         </div>
-                    </div>
-                `;
-            }).join('') || '<p style="text-align:center; color:#999; grid-column:1/-1;">ไม่มีลูกค้า</p>';
+                    `;
+                }).join('') || '<p style="text-align:center; color:#999; grid-column:1/-1;">ไม่มีลูกค้า</p>';
+            }
         }
 
         // --- CASHIER ---
         function renderCashier() {
             const uniqueTables = [...new Set(ordersData.map(o => o.table))];
-            document.getElementById('cashier-tables').innerHTML = uniqueTables.map(t => `
-                <div class="table-card" onclick="selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p style="color:#777">คลิกเพื่อดูบิล</p></div>
-            `).join('') || '<p>ไม่มีโต๊ะค้างชำระ</p>';
+            const div = document.getElementById('cashier-tables');
+            if(div) {
+                div.innerHTML = uniqueTables.map(t => `
+                    <div class="table-card" onclick="selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p style="color:#777">คลิกเพื่อดูบิล</p></div>
+                `).join('') || '<p>ไม่มีโต๊ะค้างชำระ</p>';
+            }
         }
 
         window.selectTable = function(tId) {
@@ -330,6 +396,11 @@
             document.getElementById('bill-items').innerHTML = `<h4>โต๊ะ ${tId}</h4>` + html;
             document.getElementById('bill-total').innerText = sum.toLocaleString();
             document.getElementById('btn-pay').disabled = false;
+            
+            // Mobile UX: Scroll to receipt
+            if(window.innerWidth <= 768) {
+                document.querySelector('.receipt').scrollIntoView({behavior:'smooth'});
+            }
         }
 
         window.pay = function() {
@@ -339,11 +410,9 @@
             const total = document.getElementById('bill-total').innerText.replace(/,/g,'');
             const myOrders = ordersData.filter(o => o.table == selectedTable);
             
-            // Collect Items for history
             let itemNames = [];
             myOrders.forEach(o => o.items.forEach(i => itemNames.push(i.name)));
             
-            // 1. Save History
             push(ref(db, 'sales_history'), {
                 timestamp_num: Date.now(),
                 date: new Date().toLocaleString(),
@@ -352,10 +421,7 @@
                 items: itemNames.join(', ')
             });
 
-            // 2. Delete Orders
             myOrders.forEach(o => remove(ref(db, 'orders/' + o.firebaseKey)));
-            
-            // 3. Delete Bill Request
             const myBill = billsData.find(b => b.table == selectedTable);
             if(myBill) remove(ref(db, 'bills/' + myBill.firebaseKey));
 
@@ -367,18 +433,21 @@
 
         // --- MENU ---
         function renderMenu() {
-            document.getElementById('menu-list').innerHTML = menuData.map(m => `
-                <tr>
-                    <td><img src="${m.img || 'https://via.placeholder.com/50'}" width="50" style="border-radius:5px; object-fit:cover;"></td>
-                    <td>${m.name}</td>
-                    <td>${m.price}</td>
-                    <td>${m.category}</td>
-                    <td>
-                        <button class="btn-icon btn-edit" onclick="editMenu('${m.firebaseKey}')"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn-icon btn-del" onclick="delMenu('${m.firebaseKey}')"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            const list = document.getElementById('menu-list');
+            if(list) {
+                list.innerHTML = menuData.map(m => `
+                    <tr>
+                        <td><img src="${m.img || 'https://via.placeholder.com/50'}" width="50" style="border-radius:5px; object-fit:cover;"></td>
+                        <td>${m.name}</td>
+                        <td>${m.price}</td>
+                        <td>${m.category}</td>
+                        <td>
+                            <button class="btn-icon btn-edit" onclick="editMenu('${m.firebaseKey}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-icon btn-del" onclick="delMenu('${m.firebaseKey}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
         }
 
         window.saveMenu = function() {
@@ -391,13 +460,13 @@
             
             const data = { name, price: parseInt(price), category: cat };
             if(currentImgBase64) data.img = currentImgBase64;
-            else if(!id) data.img = 'https://via.placeholder.com/150'; // Default img for new
+            else if(!id) data.img = 'https://via.placeholder.com/150'; 
 
             if(id) {
                 update(ref(db, 'menu/' + id), data);
                 alert('แก้ไขเรียบร้อย');
             } else {
-                push(ref(db, 'menu'), { ...data, id: Date.now() }); // id for compatibility
+                push(ref(db, 'menu'), { ...data, id: Date.now() }); 
                 alert('เพิ่มเมนูเรียบร้อย');
             }
             window.resetForm();
@@ -437,45 +506,51 @@
         }
 
         // Image Handler
-        document.getElementById('mImg').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const max = 300;
-                    let scale = 1; if(img.width > max) scale = max/img.width;
-                    canvas.width = img.width * scale; canvas.height = img.height * scale;
-                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                    currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        const imgInput = document.getElementById('mImg');
+        if(imgInput) {
+            imgInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const max = 300;
+                        let scale = 1; if(img.width > max) scale = max/img.width;
+                        canvas.width = img.width * scale; canvas.height = img.height * scale;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    }
+                    img.src = evt.target.result;
                 }
-                img.src = evt.target.result;
-            }
-            reader.readAsDataURL(file);
-        });
+                reader.readAsDataURL(file);
+            });
+        }
 
         // --- HISTORY ---
         window.renderHist = function() {
+            if(!document.getElementById('hist-filter')) return;
+            
             const filterVal = document.getElementById('hist-filter').value || new Date().toISOString().slice(0,7);
             const [selYear, selMonth] = filterVal.split('-').map(Number);
             
-            // Filter
             const filtered = historyData.filter(h => {
                 const d = new Date(h.timestamp_num || h.id);
                 return d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth;
             });
 
-            // Update Table
             let total = 0;
             const list = document.getElementById('hist-list');
-            list.innerHTML = '';
-            filtered.sort((a,b) => (b.timestamp_num||b.id) - (a.timestamp_num||a.id)).forEach(h => {
-                total += parseInt(h.amount);
-                list.innerHTML += `<tr><td>${h.date}</td><td>${h.table}</td><td>${h.items||'-'}</td><td style="color:var(--success); font-weight:bold;">${parseInt(h.amount).toLocaleString()}</td></tr>`;
-            });
-            document.getElementById('month-total-display').innerText = total.toLocaleString();
+            if(list) {
+                list.innerHTML = '';
+                filtered.sort((a,b) => (b.timestamp_num||b.id) - (a.timestamp_num||a.id)).forEach(h => {
+                    total += parseInt(h.amount);
+                    list.innerHTML += `<tr><td>${h.date}</td><td>${h.table}</td><td>${h.items||'-'}</td><td style="color:var(--success); font-weight:bold;">${parseInt(h.amount).toLocaleString()}</td></tr>`;
+                });
+            }
+            const elTotal = document.getElementById('month-total-display');
+            if(elTotal) elTotal.innerText = total.toLocaleString();
 
             // Daily Chart
             const daysInMonth = new Date(selYear, selMonth, 0).getDate();
@@ -495,7 +570,9 @@
         }
 
         function renderChart(id, chartVar, type, labels, data, label, color) {
-            const ctx = document.getElementById(id).getContext('2d');
+            const el = document.getElementById(id);
+            if(!el) return;
+            const ctx = el.getContext('2d');
             if(id === 'dailyChart' && dailyChart) dailyChart.destroy();
             if(id === 'yearlyChart' && yearlyChart) yearlyChart.destroy();
 
@@ -520,48 +597,35 @@
 
         // --- TOP 10 CALCULATION ---
         function renderTop10() {
-            // 1. นับจำนวนสินค้าจาก History
             let itemCounts = {};
-            
             historyData.forEach(h => {
                 if (h.items) {
-                    // แยกรายการอาหารด้วยเครื่องหมายจุลภาค (,)
                     let items = h.items.split(','); 
                     items.forEach(item => {
-                        let name = item.trim(); // ตัดช่องว่างหน้าหลัง
-                        if (name) {
-                            itemCounts[name] = (itemCounts[name] || 0) + 1;
-                        }
+                        let name = item.trim(); 
+                        if (name) itemCounts[name] = (itemCounts[name] || 0) + 1;
                     });
                 }
             });
 
-            // 2. แปลงเป็น Array เพื่อเตรียมจัดอันดับ และกรองหมวดหมู่
             let ranking = [];
-            
             Object.keys(itemCounts).forEach(name => {
-                // ค้นหาข้อมูลเมนูเพื่อดูหมวดหมู่และราคา
                 let menuInfo = menuData.find(m => m.name === name);
-
-                // เงื่อนไข: ต้องมีข้อมูลในเมนู และ หมวดหมู่ต้องไม่ใช่ "เครื่องดื่ม"
                 if (menuInfo && menuInfo.category !== 'เครื่องดื่ม') {
                     ranking.push({
                         name: name,
                         count: itemCounts[name],
-                        // ยอดรวม = จำนวนที่ขาย x ราคาปัจจุบัน (เป็นการประมาณการ)
                         total: itemCounts[name] * parseInt(menuInfo.price)
                     });
                 }
             });
 
-            // 3. เรียงลำดับจากมากไปน้อย (Count)
             ranking.sort((a, b) => b.count - a.count);
-
-            // 4. ตัดเอาแค่ 10 อันดับแรก
             let top10 = ranking.slice(0, 10);
 
-            // 5. แสดงผลลงตาราง
             const tbody = document.getElementById('top10-list');
+            if(!tbody) return;
+            
             if (ranking.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center">ไม่มีข้อมูลยอดขาย</td></tr>';
                 return;
@@ -577,9 +641,39 @@
             `).join('');
         }
 
-        // Set Default Month
+        // --- 2. LISTEN TO DATA (ย้ายมาไว้ล่างสุด) ---
+        // เหตุผล: เพื่อรอให้ฟังก์ชัน render ต่างๆ ถูกประกาศให้เสร็จก่อน จึงค่อยเรียกใช้
+        
+        onValue(ref(db, 'orders'), (s) => {
+            ordersData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
+            refreshUI();
+        });
+
+        onValue(ref(db, 'menu'), (s) => {
+            menuData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
+            renderMenu();
+            renderTop10(); 
+        });
+
+        onValue(ref(db, 'sales_history'), (s) => {
+            historyData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
+            // เรียก renderHist ผ่าน window หรือเช็คก่อนว่ามีฟังก์ชันไหม
+            if(typeof window.renderHist === 'function') window.renderHist();
+            if(typeof renderTop10 === 'function') renderTop10();
+            refreshUI(); 
+        });
+
+        onValue(ref(db, 'bills'), (s) => {
+            billsData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
+            refreshUI();
+        });
+
+        // Set Default Month and Init
         const n = new Date();
-        document.getElementById('hist-filter').value = `${n.getFullYear()}-${(n.getMonth()+1).toString().padStart(2,'0')}`;
+        const dateInput = document.getElementById('hist-filter');
+        if(dateInput) dateInput.value = `${n.getFullYear()}-${(n.getMonth()+1).toString().padStart(2,'0')}`;
+        
+        go('cashier'); // เริ่มต้นที่หน้า Cashier
 
     </script>
 </body>
