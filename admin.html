@@ -166,6 +166,28 @@
             </table>
         </div>
     </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Top 10 สินค้าขายดี (ไม่รวมเครื่องดื่ม)</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>อันดับ</th>
+                            <th>ชื่อสินค้า</th>
+                            <th>จำนวนที่ขายได้</th>
+                            <th>ยอดรวม (ประมาณการ)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top10-list">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -203,11 +225,13 @@
         onValue(ref(db, 'menu'), (s) => {
             menuData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
             renderMenu();
+            renderTop10(); // <--- เพิ่มบรรทัดนี้ (เพื่อให้รู้หมวดหมู่สินค้า)
         });
         onValue(ref(db, 'sales_history'), (s) => {
             historyData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
             renderHist();
-            refreshUI(); // Update dashboard stats
+            renderTop10(); // <--- เพิ่มบรรทัดนี้ (เพื่อคำนวณยอดขายใหม่)
+            refreshUI(); 
         });
         onValue(ref(db, 'bills'), (s) => {
             billsData = s.val() ? Object.entries(s.val()).map(([k,v]) => ({firebaseKey:k, ...v})) : [];
@@ -490,6 +514,65 @@
             const newChart = new Chart(ctx, config);
             if(id === 'dailyChart') dailyChart = newChart;
             if(id === 'yearlyChart') yearlyChart = newChart;
+        }
+
+        // --- TOP 10 CALCULATION ---
+        function renderTop10() {
+            // 1. นับจำนวนสินค้าจาก History
+            let itemCounts = {};
+            
+            historyData.forEach(h => {
+                if (h.items) {
+                    // แยกรายการอาหารด้วยเครื่องหมายจุลภาค (,)
+                    let items = h.items.split(','); 
+                    items.forEach(item => {
+                        let name = item.trim(); // ตัดช่องว่างหน้าหลัง
+                        if (name) {
+                            itemCounts[name] = (itemCounts[name] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            // 2. แปลงเป็น Array เพื่อเตรียมจัดอันดับ และกรองหมวดหมู่
+            let ranking = [];
+            
+            Object.keys(itemCounts).forEach(name => {
+                // ค้นหาข้อมูลเมนูเพื่อดูหมวดหมู่และราคา
+                let menuInfo = menuData.find(m => m.name === name);
+
+                // เงื่อนไข: ต้องมีข้อมูลในเมนู และ หมวดหมู่ต้องไม่ใช่ "เครื่องดื่ม"
+                if (menuInfo && menuInfo.category !== 'เครื่องดื่ม') {
+                    ranking.push({
+                        name: name,
+                        count: itemCounts[name],
+                        // ยอดรวม = จำนวนที่ขาย x ราคาปัจจุบัน (เป็นการประมาณการ)
+                        total: itemCounts[name] * parseInt(menuInfo.price)
+                    });
+                }
+            });
+
+            // 3. เรียงลำดับจากมากไปน้อย (Count)
+            ranking.sort((a, b) => b.count - a.count);
+
+            // 4. ตัดเอาแค่ 10 อันดับแรก
+            let top10 = ranking.slice(0, 10);
+
+            // 5. แสดงผลลงตาราง
+            const tbody = document.getElementById('top10-list');
+            if (ranking.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">ไม่มีข้อมูลยอดขาย</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = top10.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>${item.count} จาน</td>
+                    <td>${item.total.toLocaleString()} ฿</td>
+                </tr>
+            `).join('');
         }
 
         // Set Default Month
