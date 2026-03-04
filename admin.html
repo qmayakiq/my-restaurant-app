@@ -160,6 +160,8 @@
         let menuData = [], ordersData = [], billsData = [], historyData = [];
         let selectedTable = null;
         let isAdmin = false;
+        let currentImgBase64 = null; // ตัวแปรเก็บรูปภาพ
+        let dailyChartObj = null; // ตัวแปรเก็บ Object ของกราฟ
 
         // Login System
         window.toggleAdminPanel = async function() {
@@ -210,7 +212,8 @@
         });
 
         onValue(ref(db, 'sales_history'), s => {
-            historyData = s.val() ? Object.values(s.val()) : [];
+            historyData = s.val() ? Object.entries(s.val()).map(([k,v])=>({firebaseKey:k, ...v})) : [];
+            renderStats(); // อัปเดตตัวเลขหน้า Dash
         });
 
         // Functions
@@ -218,7 +221,7 @@
             const list = document.getElementById('menu-list');
             list.innerHTML = menuData.map(m => `
                 <tr>
-                    <td><img src="${m.img||'https://via.placeholder.com/50'}" width="40" style="border-radius:5px;"></td>
+                    <td><img src="${m.img||'https://via.placeholder.com/50'}" width="40" height="40" style="border-radius:5px; object-fit:cover;"></td>
                     <td>${m.name}</td>
                     <td>${m.price}</td>
                     <td><button onclick="delMenu('${m.firebaseKey}')" style="color:red;border:none;background:none;cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td>
@@ -227,7 +230,15 @@
         }
 
         window.delMenu = (key) => {
-            if(confirm('ลบเมนูนี้?')) remove(ref(db, 'menu/'+key));
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'ลบ'
+            }).then(res => {
+                if(res.isConfirmed) remove(ref(db, 'menu/'+key));
+            });
         }
 
         function renderDash() {
@@ -239,7 +250,7 @@
                     <h3>โต๊ะ ${t}</h3>
                     <p>${isBilling?'⚠️ เรียกเก็บเงิน':'🍴 กำลังทาน'}</p>
                 </div>`;
-            }).join('') || '<p>ไม่มีลูกค้า</p>';
+            }).join('') || '<p style="grid-column: 1/-1; text-align:center;">ไม่มีลูกค้า</p>';
         }
 
         function renderCashier() {
@@ -252,10 +263,14 @@
             selectedTable = t;
             const myOrders = ordersData.filter(o => o.table == t);
             let sum = 0, html = `<h4>โต๊ะ ${t}</h4>`;
-            myOrders.forEach(o => o.items.forEach(i => {
-                html += `<div style="display:flex;justify-content:space-between"><span>${i.name}</span><span>${i.price}</span></div>`;
-                sum += parseInt(i.price);
-            }));
+            myOrders.forEach(o => {
+                if(o.items) {
+                    o.items.forEach(i => {
+                        html += `<div style="display:flex;justify-content:space-between; margin-bottom:5px;"><span>${i.name}</span><span>${i.price} ฿</span></div>`;
+                        sum += parseInt(i.price);
+                    });
+                }
+            });
             document.getElementById('bill-items').innerHTML = html;
             document.getElementById('bill-total').innerText = sum.toLocaleString();
             document.getElementById('btn-pay').disabled = false;
@@ -263,7 +278,7 @@
 
         window.pay = function() {
             Swal.fire({
-                title: 'ยืนยันรับชำระเงิน?',
+                title: `ยืนยันรับเงินโต๊ะ ${selectedTable}?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#27ae60',
@@ -273,7 +288,6 @@
                     const total = document.getElementById('bill-total').innerText.replace(/,/g,'');
                     const myOrders = ordersData.filter(o => o.table == selectedTable);
                     
-                    // บันทึกสถิติ
                     push(ref(db, 'sales_history'), {
                         date: new Date().toLocaleDateString(),
                         amount: total,
@@ -281,10 +295,8 @@
                         timestamp: Date.now()
                     });
 
-                    // ลบออเดอร์ออก
                     myOrders.forEach(o => remove(ref(db, 'orders/'+o.firebaseKey)));
                     
-                    // ลบคำขอเรียกบิล (ถ้ามี)
                     onValue(ref(db, 'bills'), s => {
                         const data = s.val();
                         if(data) {
@@ -297,10 +309,111 @@
                     Swal.fire('ชำระเงินเรียบร้อย', '', 'success');
                     selectedTable = null;
                     document.getElementById('bill-items').innerHTML = '<p>ชำระแล้ว</p>';
+                    document.getElementById('bill-total').innerText = '0';
                     document.getElementById('btn-pay').disabled = true;
                 }
             });
         }
+
+        // --- เพิ่มฟังก์ชันจัดการเมนู ---
+        window.saveMenu = function() {
+            const name = document.getElementById('mName').value;
+            const price = document.getElementById('mPrice').value;
+            const cat = document.getElementById('mCat').value;
+
+            if(!name || !price) return Swal.fire('กรุณากรอกข้อมูลให้ครบ', '', 'warning');
+
+            const data = {
+                name: name,
+                price: parseInt(price),
+                category: cat,
+                img: currentImgBase64 || 'https://via.placeholder.com/150'
+            };
+
+            push(ref(db, 'menu'), data).then(() => {
+                Swal.fire('บันทึกสำเร็จ', '', 'success');
+                document.getElementById('mName').value = '';
+                document.getElementById('mPrice').value = '';
+                document.getElementById('mImg').value = '';
+                currentImgBase64 = null;
+            });
+        }
+
+        // การจัดการรูปภาพ (Base64)
+        const imgInput = document.getElementById('mImg');
+        imgInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const max = 300;
+                    let scale = 1; if(img.width > max) scale = max/img.width;
+                    canvas.width = img.width * scale; canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                }
+                img.src = evt.target.result;
+            }
+            reader.readAsDataURL(file);
+        });
+
+        // --- เพิ่มฟังก์ชันสถิติและกราฟ ---
+        function renderStats() {
+            const today = new Date().toLocaleDateString();
+            let todaySum = 0;
+            historyData.forEach(h => {
+                if(h.date === today) todaySum += parseInt(h.amount);
+            });
+            document.getElementById('today-sales').innerText = todaySum.toLocaleString() + ' ฿';
+            document.getElementById('total-orders').innerText = historyData.length;
+        }
+
+        window.renderChart = function() {
+            const ctx = document.getElementById('dailyChart').getContext('2d');
+            
+            // ประมวลผลข้อมูลรายวัน (7 วันล่าสุด)
+            const last7Days = [];
+            for(let i=6; i>=0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                last7Days.push(d.toLocaleDateString());
+            }
+
+            const chartData = last7Days.map(day => {
+                return historyData.filter(h => h.date === day).reduce((sum, h) => sum + parseInt(h.amount), 0);
+            });
+
+            if(dailyChartObj) dailyChartObj.destroy();
+
+            dailyChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last7Days.map(d => d.split('/')[0] + '/' + d.split('/')[1]),
+                    datasets: [{
+                        label: 'ยอดขายรายวัน',
+                        data: chartData,
+                        borderColor: '#1a237e',
+                        backgroundColor: 'rgba(26, 35, 126, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // อันดับสินค้าขายดี (Top 10) - ดึงข้อมูลพื้นฐานมาแสดง
+            const topList = document.getElementById('top10-list');
+            topList.innerHTML = `<thead><tr><th>โต๊ะ</th><th>ยอดเงิน</th><th>เวลา</th></tr></thead>` +
+                historyData.slice(-10).reverse().map(h => `<tr><td>โต๊ะ ${h.table}</td><td>${parseInt(h.amount).toLocaleString()} ฿</td><td>${new Date(h.timestamp).toLocaleTimeString()}</td></tr>`).join('');
+        }
+
     </script>
 </body>
 </html>
