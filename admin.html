@@ -111,7 +111,7 @@
 
         window.toggleAdminPanel = async function() {
             if(!isAdmin) {
-                const { value: pass } = await Swal.fire({ title: 'ยืนยัน Admin', icon: 'lock', input: 'password', inputPlaceholder: 'รหัส (1234)' });
+                const { value: pass } = await Swal.fire({ title: 'ยืนยัน Admin', icon: 'lock', input: 'password', inputPlaceholder: 'รหัส' });
                 if(pass === '1234') {
                     isAdmin = true; document.querySelectorAll('.admin-only-tab').forEach(el => el.style.display = 'flex');
                     document.getElementById('gear-icon').classList.add('admin-active'); Swal.fire('Login Success', '', 'success');
@@ -261,3 +261,4 @@
     </script>
 </body>
 </html>
+
