@@ -21,37 +21,26 @@
         .admin-only-tab { display: none; }
         .panel { background: var(--white); padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 25px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .stat-card { background: white; padding: 15px; border-radius: var(--radius); text-align: center; border-bottom: 4px solid var(--gold); }
+        .stat-card { background: white; padding: 15px; border-radius: var(--radius); text-align: center; border-bottom: 4px solid var(--gold); position: relative; }
         .stat-val { font-size: 1.8rem; font-weight: bold; color: var(--primary); }
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
         .table-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; border-left: 5px solid var(--primary); cursor: pointer; transition: 0.3s; position: relative; }
-        .table-card h3 { margin: 5px 0; font-size: 1.1rem; }
         .table-alert { animation: pulse 1s infinite; border-left-color: var(--danger) !important; background: #fff5f5; }
         @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
         .cashier-wrap { display: flex; gap: 20px; }
         .receipt { width: 320px; background: #2c3e50; color: white; padding: 20px; border-radius: 12px; height: fit-content; }
         .receipt-body { font-family: monospace; margin: 15px 0; border-top: 1px dashed #555; padding: 10px 0; max-height: 300px; overflow-y: auto; }
         .btn-pay { background: var(--gold); color: var(--primary); border: none; padding: 12px; width: 100%; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        .btn-pay:disabled { background: #555; opacity: 0.5; cursor: not-allowed; }
+        .btn-pay:disabled { background: #555; opacity: 0.5; }
         .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Prompt'; }
         .btn-save { background: var(--primary); color: white; padding: 12px; border: none; width: 100%; border-radius: 50px; cursor: pointer; }
         table { width: 100%; border-collapse: collapse; }
         th { background: var(--primary); color: white; padding: 12px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-        
-        /* กระพริบสีแดงเมื่อเรียกเก็บเงิน */
-        .bill-request-blink {
-            background-color: #fff5f5 !important;
-            border: 2px solid #e74c3c !important;
-            animation: flash-red 1s infinite;
-            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
-        }
-        @keyframes flash-red { 
-            0% { opacity: 1; } 50% { opacity: 0.7; background-color: #ffcccc; } 100% { opacity: 1; }
-        }
-        .bill-request-blink::after { content: '🔔 เรียกเช็คบิล'; position: absolute; bottom: 5px; right: 10px; font-size: 0.7rem; color: #e74c3c; font-weight: bold; }
-
+        .bill-request-blink { background-color: #fff5f5 !important; border: 2px solid #e74c3c !important; animation: flash-red 1s infinite; box-shadow: 0 0 15px rgba(231, 76, 60, 0.4); }
+        @keyframes flash-red { 0% { opacity: 1; } 50% { opacity: 0.7; background-color: #ffcccc; } 100% { opacity: 1; } }
+        .bill-request-blink::after { content: '🔔 เรียกเช็คบิล'; position: absolute; bottom: 5px; right: 10px; font-size: 0.6rem; color: #e74c3c; font-weight: bold; }
         @media(max-width: 768px) { .cashier-wrap { flex-direction: column; } .receipt { width: 100%; } .stats-grid { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
@@ -62,7 +51,7 @@
         <button class="tab-btn active" onclick="go('cashier')" id="btn-cashier"><i class="fa-solid fa-cash-register"></i> แคชเชียร์</button>
         <button class="tab-btn admin-only-tab" onclick="go('dash')" id="btn-dash"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด</button>
         <button class="tab-btn admin-only-tab" onclick="go('menu')" id="btn-menu"><i class="fa-solid fa-burger"></i> จัดการเมนู</button>
-        <button class="tab-btn admin-only-tab" onclick="go('hist')" id="btn-hist"><i class="fa-solid fa-clock-rotate-left"></i> สถิติ</button>
+        <button class="tab-btn admin-only-tab" onclick="go('hist')" id="btn-hist"><i class="fa-solid fa-clock-rotate-left"></i> สถิติเชิงลึก</button>
     </div>
 
     <div id="tab-cashier" class="tab-content">
@@ -87,7 +76,7 @@
 
     <div id="tab-menu" class="tab-content" style="display:none">
         <div class="panel">
-            <h2>จัดการเมนู</h2>
+            <h2>เพิ่ม/แก้ไขเมนู</h2>
             <div class="form-row"><input type="text" id="mName" placeholder="ชื่อเมนู"><input type="number" id="mPrice" placeholder="ราคา"></div>
             <div class="form-row"><select id="mCat"><option value="อาหาร">อาหาร</option><option value="เครื่องดื่ม">เครื่องดื่ม</option></select><input type="file" id="mImg" accept="image/*"></div>
             <button class="btn-save" onclick="saveMenu()">บันทึกข้อมูล</button>
@@ -96,26 +85,37 @@
     </div>
 
     <div id="tab-hist" class="tab-content" style="display:none">
-        <div class="panel"><div style="height:300px;"><canvas id="dailyChart"></canvas></div></div>
-        <div class="panel"><h3>ประวัติล่าสุด</h3><table id="top10-list"></table></div>
+        <div class="stats-grid panel">
+            <div class="stat-card" style="border-bottom-color: #3498db;"><div>ยอดเฉลี่ยต่อบิล</div><div class="stat-val" id="avg-bill">0 ฿</div></div>
+            <div class="stat-card" style="border-bottom-color: #9b59b6;"><div>เมนูยอดฮิต</div><div class="stat-val" id="top-item-name" style="font-size:1.2rem;">-</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+            <div class="panel"><h3>📈 ยอดขาย 7 วันล่าสุด</h3><div style="height:250px;"><canvas id="dailyChart"></canvas></div></div>
+            <div class="panel"><h3>🕒 ช่วงเวลาที่ลูกค้าเยอะ (Hourly)</h3><div style="height:250px;"><canvas id="hourlyChart"></canvas></div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+            <div class="panel"><h3>🍕 สัดส่วนยอดขาย</h3><div style="height:250px; display:flex; justify-content:center;"><canvas id="categoryChart"></canvas></div></div>
+            <div class="panel"><h3>🏆 10 อันดับขายดี</h3><div style="overflow-y:auto; max-height:250px;"><table id="best-seller-table"><thead><tr><th>ชื่อเมนู</th><th>จำนวน</th><th>ยอดเงิน</th></tr></thead><tbody id="top-items-list"></tbody></table></div></div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, push, remove, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDk4aCo5QjHesgZEfdUJ8aoSTMQv7W5vUQ", authDomain: "restaurant-menu-af41d.firebaseapp.com", databaseURL: "https://restaurant-menu-af41d-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "restaurant-menu-af41d", storageBucket: "restaurant-menu-af41d.firebasestorage.app", messagingSenderId: "110746441918", appId: "1:110746441918:web:5bc38b6b758b488d9f66ef" };
         const app = initializeApp(firebaseConfig); const db = getDatabase(app);
         
-        let menuData = [], ordersData = [], billsData = [], historyData = [], selectedTable = null, isAdmin = false, currentImgBase64 = null, dailyChartObj = null;
+        let menuData = [], ordersData = [], billsData = [], historyData = [], selectedTable = null, isAdmin = false, currentImgBase64 = null;
+        let dailyChartObj = null, hourlyChartObj = null, categoryChartObj = null;
 
         window.toggleAdminPanel = async function() {
             if(!isAdmin) {
-                const { value: pass } = await Swal.fire({ title: 'ยืนยัน Admin', icon: 'lock', input: 'password', inputPlaceholder: 'รหัส' });
+                const { value: pass } = await Swal.fire({ title: 'ยืนยัน Admin', icon: 'lock', input: 'password', inputPlaceholder: 'รหัส (1234)' });
                 if(pass === '1234') {
                     isAdmin = true; document.querySelectorAll('.admin-only-tab').forEach(el => el.style.display = 'flex');
-                    document.getElementById('gear-icon').classList.add('admin-active'); Swal.fire('Login Success', '', 'success');
-                } else if(pass) { Swal.fire('รหัสผิด', '', 'error'); }
+                    document.getElementById('gear-icon').classList.add('admin-active'); Swal.fire('เข้าสู่ระบบสำเร็จ', '', 'success');
+                } else if(pass) { Swal.fire('รหัสผ่านผิด', '', 'error'); }
             } else {
                 isAdmin = false; document.querySelectorAll('.admin-only-tab').forEach(el => el.style.display = 'none');
                 document.getElementById('gear-icon').classList.remove('admin-active'); window.go('cashier');
@@ -127,21 +127,17 @@
             document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
             document.getElementById('tab-'+id).style.display = 'block';
             document.getElementById('btn-'+id).classList.add('active');
-            if(id === 'hist') window.renderChart();
+            if(id === 'hist') window.renderAnalytics();
         };
 
-        // Realtime Listeners
+        // ฟังข้อมูล Realtime
         onValue(ref(db, 'menu'), s => { menuData = s.val() ? Object.entries(s.val()).map(([k,v])=>({firebaseKey:k, ...v})) : []; renderMenu(); });
-        
         onValue(ref(db, 'orders'), s => { 
             ordersData = s.val() ? Object.entries(s.val()).map(([k,v])=>({firebaseKey:k, ...v})) : []; 
-            renderDash(); 
-            renderCashier(); 
+            renderDash(); renderCashier(); 
             if(selectedTable) window.selectTable(selectedTable); 
         });
-
         onValue(ref(db, 'bills'), s => { billsData = s.val() ? Object.values(s.val()) : []; renderDash(); renderCashier(); });
-        
         onValue(ref(db, 'sales_history'), s => { 
             historyData = s.val() ? Object.entries(s.val()).map(([k,v])=>v) : []; 
             renderStats(); 
@@ -149,13 +145,12 @@
 
         function renderMenu() {
             const list = document.getElementById('menu-list');
-            if(!list) return;
-            list.innerHTML = menuData.map(m => `<tr><td><img src="${m.img||'https://via.placeholder.com/50'}" width="40" height="40" style="border-radius:5px; object-fit:cover;"></td><td>${m.name}</td><td>${m.price}</td><td><button onclick="delMenu('${m.firebaseKey}')" style="color:red;border:none;background:none;cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+            list.innerHTML = menuData.map(m => `<tr><td><img src="${m.img||'https://via.placeholder.com/50'}" width="40" height="40" style="border-radius:5px; object-fit:cover;"></td><td>${m.name}</td><td>${m.price} ฿</td><td><button onclick="delMenu('${m.firebaseKey}')" style="color:red;border:none;background:none;cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
         }
-        window.delMenu = (key) => { Swal.fire({ title: 'ยืนยัน?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ' }).then(res => { if(res.isConfirmed) remove(ref(db, 'menu/'+key)); }); }
+        window.delMenu = (key) => { Swal.fire({ title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ' }).then(res => { if(res.isConfirmed) remove(ref(db, 'menu/'+key)); }); }
 
         function renderDash() {
-            const div = document.getElementById('dash-tables'); 
+            const div = document.getElementById('dash-tables');
             if(!div) return;
             const tables = [...new Set(ordersData.map(o=>o.table))];
             div.innerHTML = tables.map(t => {
@@ -170,49 +165,57 @@
             const tables = [...new Set(ordersData.map(o=>o.table))];
             div.innerHTML = tables.map(t => {
                 const isRequesting = billsData.some(b => String(b.table) === String(t));
-                return `<div class="table-card ${isRequesting?'bill-request-blink':''}" onclick="selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p style="font-size:0.8rem; color:#777">คลิกดูรายละเอียด</p></div>`;
+                return `<div class="table-card ${isRequesting?'bill-request-blink':''}" onclick="selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p style="font-size:0.8rem; color:#777">คลิกดูบิล</p></div>`;
             }).join('') || '<p style="text-align:center; grid-column:1/-1">ไม่มีโต๊ะค้างชำระ</p>';
         }
 
         window.selectTable = (t) => {
-            selectedTable = t; 
-            const myOrders = ordersData.filter(o => String(o.table) === String(t)); 
+            selectedTable = t;
+            const myOrders = ordersData.filter(o => String(o.table) === String(t));
             let sum = 0, html = `<h4>โต๊ะ ${t}</h4>`;
-            myOrders.forEach(o => { 
-                if(o.items) { 
-                    o.items.forEach(i => { 
-                        html += `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #444;padding:5px 0;"><span>${i.done?'✅':'⏳'} ${i.name}</span><span>${i.price} ฿</span></div>`; 
-                        sum += parseInt(i.price); 
-                    }); 
-                } 
+            myOrders.forEach(o => {
+                if(o.items) {
+                    o.items.forEach(i => {
+                        html += `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #444;padding:5px 0;"><span>${i.done?'✅':'⏳'} ${i.name}</span><span>${i.price} ฿</span></div>`;
+                        sum += parseInt(i.price);
+                    });
+                }
             });
-            document.getElementById('bill-items').innerHTML = html; 
-            document.getElementById('bill-total').innerText = sum.toLocaleString(); 
+            document.getElementById('bill-items').innerHTML = html;
+            document.getElementById('bill-total').innerText = sum.toLocaleString();
             document.getElementById('btn-pay').disabled = (sum === 0);
         }
 
         window.pay = () => {
             if(!selectedTable) return;
-            Swal.fire({ title: `รับเงินโต๊ะ ${selectedTable}?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#27ae60', confirmButtonText: 'ยืนยันรับเงิน' }).then(res => {
+            Swal.fire({ title: `รับเงินโต๊ะ ${selectedTable}?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#27ae60', confirmButtonText: 'ยืนยัน' }).then(res => {
                 if(res.isConfirmed) {
                     const total = document.getElementById('bill-total').innerText.replace(/,/g,'');
-                    push(ref(db, 'sales_history'), { date: new Date().toLocaleDateString(), amount: total, table: selectedTable, timestamp: Date.now() });
+                    const myOrders = ordersData.filter(o => String(o.table) === String(selectedTable));
                     
-                    // ลบออเดอร์
-                    ordersData.filter(o => String(o.table) === String(selectedTable)).forEach(o => remove(ref(db, 'orders/'+o.firebaseKey)));
-                    
-                    // ลบคำขอเรียกเก็บเงิน
-                    onValue(ref(db, 'bills'), s => { 
-                        const data = s.val(); 
-                        if(data) Object.entries(data).forEach(([k,v]) => { 
-                            if(String(v.table) === String(selectedTable)) remove(ref(db, 'bills/'+k)); 
-                        }); 
+                    // รวบรวมรายการอาหารเพื่อเก็บสถิติเชิงลึก
+                    let allItems = [];
+                    myOrders.forEach(o => { if(o.items) allItems = allItems.concat(o.items); });
+
+                    push(ref(db, 'sales_history'), {
+                        date: new Date().toLocaleDateString(),
+                        amount: total,
+                        table: selectedTable,
+                        timestamp: Date.now(),
+                        items: allItems
+                    });
+
+                    // ลบข้อมูลหลังจ่ายเงิน
+                    myOrders.forEach(o => remove(ref(db, 'orders/'+o.firebaseKey)));
+                    onValue(ref(db, 'bills'), s => {
+                        const data = s.val();
+                        if(data) Object.entries(data).forEach(([k,v]) => { if(String(v.table) === String(selectedTable)) remove(ref(db, 'bills/'+k)); });
                     }, {onlyOnce: true});
 
-                    Swal.fire('ชำระเงินเรียบร้อย', '', 'success'); 
-                    selectedTable = null; 
-                    document.getElementById('bill-items').innerHTML = '<p style="text-align:center;color:#777">ชำระเงินเสร็จสิ้น</p>'; 
-                    document.getElementById('bill-total').innerText = '0'; 
+                    Swal.fire('ชำระเงินเรียบร้อย', '', 'success');
+                    selectedTable = null;
+                    document.getElementById('bill-items').innerHTML = '<p style="text-align:center;color:#777">ชำระเงินแล้ว</p>';
+                    document.getElementById('bill-total').innerText = '0';
                     document.getElementById('btn-pay').disabled = true;
                 }
             });
@@ -220,45 +223,89 @@
 
         window.saveMenu = () => {
             const name = document.getElementById('mName').value, price = document.getElementById('mPrice').value, cat = document.getElementById('mCat').value;
-            if(!name || !price) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อและราคา', 'warning');
-            push(ref(db, 'menu'), { name, price: parseInt(price), category: cat, img: currentImgBase64 || 'https://via.placeholder.com/150' }).then(() => { 
-                Swal.fire('บันทึกแล้ว', '', 'success'); 
-                document.getElementById('mName').value = ''; document.getElementById('mPrice').value = ''; 
-                currentImgBase64 = null; 
+            if(!name || !price) return Swal.fire('ข้อมูลไม่ครบ', '', 'warning');
+            push(ref(db, 'menu'), { name, price: parseInt(price), category: cat, img: currentImgBase64 || 'https://via.placeholder.com/150' }).then(() => {
+                Swal.fire('บันทึกเมนูสำเร็จ', '', 'success');
+                document.getElementById('mName').value = ''; document.getElementById('mPrice').value = '';
+                currentImgBase64 = null;
             });
         }
 
         const imgInput = document.getElementById('mImg');
-        if(imgInput) {
-            imgInput.addEventListener('change', e => {
-                const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
-                reader.onload = evt => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 300; let scale = 1; if(img.width > max) scale = max/img.width; canvas.width = img.width * scale; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7); }; img.src = evt.target.result; }; reader.readAsDataURL(file);
-            });
+        imgInput.addEventListener('change', e => {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = evt => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const max = 300; let scale = 1; if(img.width > max) scale = max/img.width;
+                    canvas.width = img.width * scale; canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function renderStats() {
+            const today = new Date().toLocaleDateString();
+            let sum = 0;
+            historyData.forEach(h => { if(h && h.date === today) sum += parseInt(h.amount); });
+            document.getElementById('today-sales').innerText = sum.toLocaleString() + ' ฿';
+            document.getElementById('total-orders').innerText = historyData.length;
         }
 
-        function renderStats() { 
-            const today = new Date().toLocaleDateString(); let sum = 0; 
-            historyData.forEach(h => { if(h && h.date === today) sum += parseInt(h.amount); }); 
-            const elToday = document.getElementById('today-sales');
-            const elTotal = document.getElementById('total-orders');
-            if(elToday) elToday.innerText = sum.toLocaleString() + ' ฿'; 
-            if(elTotal) elTotal.innerText = historyData.length; 
-        }
-
-        window.renderChart = () => {
-            const el = document.getElementById('dailyChart'); if(!el) return;
-            const ctx = el.getContext('2d'); const days = []; for(let i=6; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); days.push(d.toLocaleDateString()); }
-            const data = days.map(day => historyData.filter(h => h && h.date === day).reduce((s, h) => s + parseInt(h.amount), 0));
-            if(dailyChartObj) dailyChartObj.destroy();
-            dailyChartObj = new Chart(ctx, { type: 'line', data: { labels: days.map(d=>d.split('/')[0]+'/'+d.split('/')[1]), datasets: [{ label: 'ยอดขาย', data, borderColor: '#1a237e', backgroundColor: 'rgba(26,35,126,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        // วิเคราะห์เชิงลึก (Deep Analytics)
+        window.renderAnalytics = () => {
+            if (historyData.length === 0) return;
             
-            const topList = document.getElementById('top10-list');
-            if(topList) topList.innerHTML = `<thead><tr><th>โต๊ะ</th><th>ยอด</th><th>เวลา</th></tr></thead>` + historyData.slice(-10).reverse().map(h => {
-                if(!h) return '';
-                return `<tr><td>โต๊ะ ${h.table}</td><td>${parseInt(h.amount).toLocaleString()}</td><td>${new Date(h.timestamp).toLocaleTimeString()}</td></tr>`
+            const ctxDaily = document.getElementById('dailyChart').getContext('2d');
+            const ctxHourly = document.getElementById('hourlyChart').getContext('2d');
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+
+            // 1. ยอดขายรายวัน (7 วัน)
+            const days = []; for(let i=6; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); days.push(d.toLocaleDateString()); }
+            const dailyData = days.map(day => historyData.filter(h => h.date === day).reduce((s, h) => s + parseInt(h.amount), 0));
+            if(dailyChartObj) dailyChartObj.destroy();
+            dailyChartObj = new Chart(ctxDaily, { type: 'line', data: { labels: days.map(d=>d.split('/')[0]+'/'+d.split('/')[1]), datasets: [{ label: 'ยอดขาย', data: dailyData, borderColor: '#1a237e', backgroundColor: 'rgba(26,35,126,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+
+            // 2. วิเคราะห์ Peak Time (ตามชั่วโมง)
+            const hourlySales = new Array(24).fill(0);
+            historyData.forEach(h => { if(h.timestamp) { const hr = new Date(h.timestamp).getHours(); hourlySales[hr] += parseInt(h.amount); } });
+            if(hourlyChartObj) hourlyChartObj.destroy();
+            hourlyChartObj = new Chart(ctxHourly, { type: 'bar', data: { labels: Array.from({length:24},(_,i)=>i+":00"), datasets: [{ label: 'ยอดขายต่อชั่วโมง', data: hourlySales, backgroundColor: '#c5a47e' }] }, options: { responsive: true, maintainAspectRatio: false } });
+
+            // 3. วิเคราะห์เมนูขายดี & หมวดหมู่
+            let itemCounts = {}, catCounts = { "อาหาร": 0, "เครื่องดื่ม": 0 }, totalRev = 0;
+            historyData.forEach(h => {
+                totalRev += parseInt(h.amount);
+                if(h.items) {
+                    h.items.forEach(item => {
+                        itemCounts[item.name] = (itemCounts[item.name] || 0) + 1;
+                        if(item.category) catCounts[item.category] = (catCounts[item.category] || 0) + parseInt(item.price);
+                    });
+                }
+            });
+
+            // เฉลี่ยต่อบิล
+            document.getElementById('avg-bill').innerText = Math.round(totalRev / historyData.length).toLocaleString() + ' ฿';
+            
+            // ตารางขายดี
+            const top10 = Object.entries(itemCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+            if(top10.length > 0) document.getElementById('top-item-name').innerText = top10[0][0];
+            
+            document.getElementById('top-items-list').innerHTML = top10.map(item => {
+                const itemInfo = menuData.find(m => m.name === item[0]);
+                const revenue = itemInfo ? itemInfo.price * item[1] : 0;
+                return `<tr><td>${item[0]}</td><td>${item[1]} จาน</td><td>${revenue.toLocaleString()} ฿</td></tr>`;
             }).join('');
+
+            // กราฟวงกลมหมวดหมู่
+            if(categoryChartObj) categoryChartObj.destroy();
+            categoryChartObj = new Chart(ctxCat, { type: 'doughnut', data: { labels: Object.keys(catCounts), datasets: [{ data: Object.values(catCounts), backgroundColor: ['#1a237e', '#c5a47e'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
     </script>
 </body>
 </html>
-
