@@ -206,15 +206,33 @@
             if(item) {
                 cart.push(item);
                 document.getElementById('cart-count').innerText = cart.length;
-                // Toast notification
+        
+                // --- Mini Popup (Toast) ---
                 const Toast = Swal.mixin({
                     toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 1500,
-                    timerProgressBar: true
+                    position: 'top-end', // เด้งที่มุมขวาบน
+                    showConfirmButton: false, // ไม่ต้องมีปุ่มกด
+                    timer: 1500, // แสดง 1.5 วินาทีแล้วหายไปเอง
+                    timerProgressBar: true, // มีแถบเวลาวิ่งด้านล่าง
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
                 });
-                Toast.fire({ icon: 'success', title: `เพิ่ม ${item.name} แล้ว` });
+        
+                Toast.fire({
+                    icon: 'success',
+                    title: `เพิ่ม ${item.name} ลงตะกร้าแล้ว`,
+                    background: '#ffffff',
+                    color: '#1a237e',
+                    iconColor: '#27ae60'
+                });
+                // -------------------------
+        
+                // เพิ่ม Animation เล็กๆ ให้ที่ไอคอนตะกร้า
+                const badge = document.getElementById('cart-count');
+                badge.style.transform = 'scale(1.5)';
+                setTimeout(() => badge.style.transform = 'scale(1)', 200);
             }
         };
 
@@ -327,3 +345,4 @@
     </script>
 </body>
 </html>
+
