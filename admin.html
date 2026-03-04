@@ -25,48 +25,39 @@
         .stat-val { font-size: 1.8rem; font-weight: bold; color: var(--primary); }
         .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
         .table-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; border-left: 5px solid var(--primary); cursor: pointer; transition: 0.3s; position: relative; }
+        .table-card h3 { margin: 5px 0; font-size: 1.1rem; }
         .table-alert { animation: pulse 1s infinite; border-left-color: var(--danger) !important; background: #fff5f5; }
         @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
         .cashier-wrap { display: flex; gap: 20px; }
         .receipt { width: 320px; background: #2c3e50; color: white; padding: 20px; border-radius: 12px; height: fit-content; }
         .receipt-body { font-family: monospace; margin: 15px 0; border-top: 1px dashed #555; padding: 10px 0; max-height: 300px; overflow-y: auto; }
         .btn-pay { background: var(--gold); color: var(--primary); border: none; padding: 12px; width: 100%; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        .btn-pay:disabled { background: #555; opacity: 0.5; }
+        .btn-pay:disabled { background: #555; opacity: 0.5; cursor: not-allowed; }
         .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Prompt'; }
         .btn-save { background: var(--primary); color: white; padding: 12px; border: none; width: 100%; border-radius: 50px; cursor: pointer; }
         table { width: 100%; border-collapse: collapse; }
         th { background: var(--primary); color: white; padding: 12px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-        @media(max-width: 768px) { .cashier-wrap { flex-direction: column; } .receipt { width: 100%; } .stats-grid { grid-template-columns: 1fr 1fr; } }
-        /* สร้างเอฟเฟกต์กระพริบสีแดง */
+        
+        /* กระพริบสีแดงเมื่อเรียกเก็บเงิน */
         .bill-request-blink {
-            background-color: #fff5f5 !important; /* พื้นหลังแดงอ่อน */
-            border: 2px solid #e74c3c !important; /* ขอบแดงเข้ม */
-            animation: flash-red 1s infinite; /* สั่งให้กระพริบทุกๆ 1 วินาที */
+            background-color: #fff5f5 !important;
+            border: 2px solid #e74c3c !important;
+            animation: flash-red 1s infinite;
             box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
         }
-        
-        @keyframes flash-red {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.02); background-color: #ffcccc; }
-            100% { opacity: 1; transform: scale(1); }
+        @keyframes flash-red { 
+            0% { opacity: 1; } 50% { opacity: 0.7; background-color: #ffcccc; } 100% { opacity: 1; }
         }
-        
-        /* เพิ่มไอคอนกระดิ่งเล็กๆ เมื่อมีการเรียกบิล */
-        .bill-request-blink::after {
-            content: '🔔 เรียกเก็บเงิน';
-            position: absolute;
-            bottom: 5px;
-            right: 10px;
-            font-size: 0.7rem;
-            color: #e74c3c;
-            font-weight: bold;
-        }
+        .bill-request-blink::after { content: '🔔 เรียกเช็คบิล'; position: absolute; bottom: 5px; right: 10px; font-size: 0.7rem; color: #e74c3c; font-weight: bold; }
+
+        @media(max-width: 768px) { .cashier-wrap { flex-direction: column; } .receipt { width: 100%; } .stats-grid { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
     <div class="header-wrap"><h1>👔 Restaurant Manager</h1><button class="admin-trigger" onclick="toggleAdminPanel()"><i class="fa-solid fa-gear" id="gear-icon"></i></button></div>
+    
     <div class="tabs">
         <button class="tab-btn active" onclick="go('cashier')" id="btn-cashier"><i class="fa-solid fa-cash-register"></i> แคชเชียร์</button>
         <button class="tab-btn admin-only-tab" onclick="go('dash')" id="btn-dash"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด</button>
@@ -120,11 +111,11 @@
 
         window.toggleAdminPanel = async function() {
             if(!isAdmin) {
-                const { value: pass } = await Swal.fire({ title: 'ยืนยัน Admin', input: 'password', inputPlaceholder: 'รหัส (1234)' });
+                const { value: pass } = await Swal.fire({ title: 'ยืนยัน Admin', icon: 'lock', input: 'password', inputPlaceholder: 'รหัส (1234)' });
                 if(pass === '1234') {
                     isAdmin = true; document.querySelectorAll('.admin-only-tab').forEach(el => el.style.display = 'flex');
                     document.getElementById('gear-icon').classList.add('admin-active'); Swal.fire('Login Success', '', 'success');
-                } else { Swal.fire('รหัสผิด', '', 'error'); }
+                } else if(pass) { Swal.fire('รหัสผิด', '', 'error'); }
             } else {
                 isAdmin = false; document.querySelectorAll('.admin-only-tab').forEach(el => el.style.display = 'none');
                 document.getElementById('gear-icon').classList.remove('admin-active'); window.go('cashier');
@@ -144,112 +135,129 @@
         
         onValue(ref(db, 'orders'), s => { 
             ordersData = s.val() ? Object.entries(s.val()).map(([k,v])=>({firebaseKey:k, ...v})) : []; 
-            renderDash(); renderCashier(); 
+            renderDash(); 
+            renderCashier(); 
             if(selectedTable) window.selectTable(selectedTable); 
         });
 
-        onValue(ref(db, 'bills'), s => { billsData = s.val() ? Object.values(s.val()) : []; renderDash(); });
+        onValue(ref(db, 'bills'), s => { billsData = s.val() ? Object.values(s.val()) : []; renderDash(); renderCashier(); });
         
         onValue(ref(db, 'sales_history'), s => { 
-            historyData = s.val() ? Object.entries(s.val()).map(([k,v])=>({firebaseKey:k, ...v})) : []; 
+            historyData = s.val() ? Object.entries(s.val()).map(([k,v])=>v) : []; 
             renderStats(); 
         });
 
         function renderMenu() {
             const list = document.getElementById('menu-list');
+            if(!list) return;
             list.innerHTML = menuData.map(m => `<tr><td><img src="${m.img||'https://via.placeholder.com/50'}" width="40" height="40" style="border-radius:5px; object-fit:cover;"></td><td>${m.name}</td><td>${m.price}</td><td><button onclick="delMenu('${m.firebaseKey}')" style="color:red;border:none;background:none;cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
         }
         window.delMenu = (key) => { Swal.fire({ title: 'ยืนยัน?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ' }).then(res => { if(res.isConfirmed) remove(ref(db, 'menu/'+key)); }); }
 
         function renderDash() {
             const div = document.getElementById('dash-tables'); 
-            if (!div) return;
-        
-            const tables = [...new Set(ordersData.map(o => o.table))];
+            if(!div) return;
+            const tables = [...new Set(ordersData.map(o=>o.table))];
             div.innerHTML = tables.map(t => {
-                // เช็คการเรียกบิล
-                const isBilling = billsData.some(b => b.table == t);
-                const blinkClass = isBilling ? 'bill-request-blink' : '';
-        
-                return `
-                    <div class="table-card ${blinkClass}" onclick="go('cashier'); selectTable('${t}')">
-                        <h3>โต๊ะ ${t}</h3>
-                        <p>${isBilling ? '⚠️ เรียกเช็คบิล' : '🍴 กำลังทาน'}</p>
-                    </div>
-                `;
-            }).join('') || '<p style="text-align:center; grid-column:1/-1">ไม่มีลูกค้า</p>';
+                const isBilling = billsData.some(b => String(b.table) === String(t));
+                return `<div class="table-card ${isBilling?'bill-request-blink':''}" onclick="go('cashier'); selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p>${isBilling?'⚠️ เรียกเช็คบิล':'🍴 กำลังทาน'}</p></div>`;
+            }).join('') || '<p style="text-align:center; grid-column:1/-1">ไม่มีลูกค้าในขณะนี้</p>';
         }
 
         function renderCashier() {
             const div = document.getElementById('cashier-tables');
-            if (!div) return;
-        
-            const tables = [...new Set(ordersData.map(o => o.table))];
-            
+            if(!div) return;
+            const tables = [...new Set(ordersData.map(o=>o.table))];
             div.innerHTML = tables.map(t => {
-                // เช็คว่าโต๊ะนี้กดเรียกบิลมาหรือยัง (เช็คจาก billsData)
-                const isRequestingBill = billsData.some(b => b.table == t);
-                const blinkClass = isRequestingBill ? 'bill-request-blink' : '';
-        
-                return `
-                    <div class="table-card ${blinkClass}" onclick="selectTable('${t}')">
-                        <h3>โต๊ะ ${t}</h3>
-                        <p style="font-size:0.8rem; color:#777">คลิกดูรายละเอียด</p>
-                    </div>
-                `;
+                const isRequesting = billsData.some(b => String(b.table) === String(t));
+                return `<div class="table-card ${isRequesting?'bill-request-blink':''}" onclick="selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p style="font-size:0.8rem; color:#777">คลิกดูรายละเอียด</p></div>`;
             }).join('') || '<p style="text-align:center; grid-column:1/-1">ไม่มีโต๊ะค้างชำระ</p>';
         }
 
         window.selectTable = (t) => {
-            selectedTable = t; const myOrders = ordersData.filter(o => o.table == t); let sum = 0, html = `<h4>โต๊ะ ${t}</h4>`;
-            myOrders.forEach(o => { if(o.items) { o.items.forEach(i => { html += `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #444;padding:5px 0;"><span>${i.done?'✅':'⏳'} ${i.name}</span><span>${i.price} ฿</span></div>`; sum += parseInt(i.price); }); } });
-            document.getElementById('bill-items').innerHTML = html; document.getElementById('bill-total').innerText = sum.toLocaleString(); document.getElementById('btn-pay').disabled = (sum === 0);
+            selectedTable = t; 
+            const myOrders = ordersData.filter(o => String(o.table) === String(t)); 
+            let sum = 0, html = `<h4>โต๊ะ ${t}</h4>`;
+            myOrders.forEach(o => { 
+                if(o.items) { 
+                    o.items.forEach(i => { 
+                        html += `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #444;padding:5px 0;"><span>${i.done?'✅':'⏳'} ${i.name}</span><span>${i.price} ฿</span></div>`; 
+                        sum += parseInt(i.price); 
+                    }); 
+                } 
+            });
+            document.getElementById('bill-items').innerHTML = html; 
+            document.getElementById('bill-total').innerText = sum.toLocaleString(); 
+            document.getElementById('btn-pay').disabled = (sum === 0);
         }
 
         window.pay = () => {
             if(!selectedTable) return;
-            Swal.fire({ title: `รับเงินโต๊ะ ${selectedTable}?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#27ae60', confirmButtonText: 'ยืนยัน' }).then(res => {
+            Swal.fire({ title: `รับเงินโต๊ะ ${selectedTable}?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#27ae60', confirmButtonText: 'ยืนยันรับเงิน' }).then(res => {
                 if(res.isConfirmed) {
                     const total = document.getElementById('bill-total').innerText.replace(/,/g,'');
                     push(ref(db, 'sales_history'), { date: new Date().toLocaleDateString(), amount: total, table: selectedTable, timestamp: Date.now() });
-                    ordersData.filter(o => o.table == selectedTable).forEach(o => remove(ref(db, 'orders/'+o.firebaseKey)));
-                    onValue(ref(db, 'bills'), s => { const data = s.val(); if(data) Object.entries(data).forEach(([k,v]) => { if(v.table == selectedTable) remove(ref(db, 'bills/'+k)); }); }, {onlyOnce: true});
-                    Swal.fire('สำเร็จ', '', 'success'); selectedTable = null; document.getElementById('bill-items').innerHTML = ''; document.getElementById('bill-total').innerText = '0'; document.getElementById('btn-pay').disabled = true;
+                    
+                    // ลบออเดอร์
+                    ordersData.filter(o => String(o.table) === String(selectedTable)).forEach(o => remove(ref(db, 'orders/'+o.firebaseKey)));
+                    
+                    // ลบคำขอเรียกเก็บเงิน
+                    onValue(ref(db, 'bills'), s => { 
+                        const data = s.val(); 
+                        if(data) Object.entries(data).forEach(([k,v]) => { 
+                            if(String(v.table) === String(selectedTable)) remove(ref(db, 'bills/'+k)); 
+                        }); 
+                    }, {onlyOnce: true});
+
+                    Swal.fire('ชำระเงินเรียบร้อย', '', 'success'); 
+                    selectedTable = null; 
+                    document.getElementById('bill-items').innerHTML = '<p style="text-align:center;color:#777">ชำระเงินเสร็จสิ้น</p>'; 
+                    document.getElementById('bill-total').innerText = '0'; 
+                    document.getElementById('btn-pay').disabled = true;
                 }
             });
         }
 
         window.saveMenu = () => {
             const name = document.getElementById('mName').value, price = document.getElementById('mPrice').value, cat = document.getElementById('mCat').value;
-            if(!name || !price) return Swal.fire('ไม่ครบ', '', 'warning');
-            push(ref(db, 'menu'), { name, price: parseInt(price), category: cat, img: currentImgBase64 || 'https://via.placeholder.com/150' }).then(() => { Swal.fire('บันทึกแล้ว', '', 'success'); document.getElementById('mName').value = ''; document.getElementById('mPrice').value = ''; currentImgBase64 = null; });
+            if(!name || !price) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อและราคา', 'warning');
+            push(ref(db, 'menu'), { name, price: parseInt(price), category: cat, img: currentImgBase64 || 'https://via.placeholder.com/150' }).then(() => { 
+                Swal.fire('บันทึกแล้ว', '', 'success'); 
+                document.getElementById('mName').value = ''; document.getElementById('mPrice').value = ''; 
+                currentImgBase64 = null; 
+            });
         }
 
         const imgInput = document.getElementById('mImg');
-        imgInput.addEventListener('change', e => {
-            const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
-            reader.onload = evt => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 300; let scale = 1; if(img.width > max) scale = max/img.width; canvas.width = img.width * scale; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7); }; img.src = evt.target.result; }; reader.readAsDataURL(file);
-        });
+        if(imgInput) {
+            imgInput.addEventListener('change', e => {
+                const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
+                reader.onload = evt => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 300; let scale = 1; if(img.width > max) scale = max/img.width; canvas.width = img.width * scale; canvas.height = img.height * scale; canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height); currentImgBase64 = canvas.toDataURL('image/jpeg', 0.7); }; img.src = evt.target.result; }; reader.readAsDataURL(file);
+            });
+        }
 
         function renderStats() { 
             const today = new Date().toLocaleDateString(); let sum = 0; 
-            historyData.forEach(h => { if(h[1] && h[1].date === today) sum += parseInt(h[1].amount); }); 
-            document.getElementById('today-sales').innerText = sum.toLocaleString() + ' ฿'; 
-            document.getElementById('total-orders').innerText = historyData.length; 
+            historyData.forEach(h => { if(h && h.date === today) sum += parseInt(h.amount); }); 
+            const elToday = document.getElementById('today-sales');
+            const elTotal = document.getElementById('total-orders');
+            if(elToday) elToday.innerText = sum.toLocaleString() + ' ฿'; 
+            if(elTotal) elTotal.innerText = historyData.length; 
         }
 
         window.renderChart = () => {
             const el = document.getElementById('dailyChart'); if(!el) return;
             const ctx = el.getContext('2d'); const days = []; for(let i=6; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); days.push(d.toLocaleDateString()); }
-            const data = days.map(day => historyData.filter(h => h[1] && h[1].date === day).reduce((s, h) => s + parseInt(h[1].amount), 0));
+            const data = days.map(day => historyData.filter(h => h && h.date === day).reduce((s, h) => s + parseInt(h.amount), 0));
             if(dailyChartObj) dailyChartObj.destroy();
             dailyChartObj = new Chart(ctx, { type: 'line', data: { labels: days.map(d=>d.split('/')[0]+'/'+d.split('/')[1]), datasets: [{ label: 'ยอดขาย', data, borderColor: '#1a237e', backgroundColor: 'rgba(26,35,126,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-            document.getElementById('top10-list').innerHTML = `<thead><tr><th>โต๊ะ</th><th>ยอด</th><th>เวลา</th></tr></thead>` + historyData.slice(-10).reverse().map(h => {
-                if(!h[1]) return '';
-                return `<tr><td>โต๊ะ ${h[1].table}</td><td>${parseInt(h[1].amount).toLocaleString()}</td><td>${new Date(h[1].timestamp).toLocaleTimeString()}</td></tr>`
+            
+            const topList = document.getElementById('top10-list');
+            if(topList) topList.innerHTML = `<thead><tr><th>โต๊ะ</th><th>ยอด</th><th>เวลา</th></tr></thead>` + historyData.slice(-10).reverse().map(h => {
+                if(!h) return '';
+                return `<tr><td>โต๊ะ ${h.table}</td><td>${parseInt(h.amount).toLocaleString()}</td><td>${new Date(h.timestamp).toLocaleTimeString()}</td></tr>`
             }).join('');
         }
     </script>
 </body>
 </html>
-
