@@ -39,6 +39,30 @@
         th { background: var(--primary); color: white; padding: 12px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
         @media(max-width: 768px) { .cashier-wrap { flex-direction: column; } .receipt { width: 100%; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+        /* สร้างเอฟเฟกต์กระพริบสีแดง */
+        .bill-request-blink {
+            background-color: #fff5f5 !important; /* พื้นหลังแดงอ่อน */
+            border: 2px solid #e74c3c !important; /* ขอบแดงเข้ม */
+            animation: flash-red 1s infinite; /* สั่งให้กระพริบทุกๆ 1 วินาที */
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        @keyframes flash-red {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.02); background-color: #ffcccc; }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        /* เพิ่มไอคอนกระดิ่งเล็กๆ เมื่อมีการเรียกบิล */
+        .bill-request-blink::after {
+            content: '🔔 เรียกเก็บเงิน';
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: #e74c3c;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -138,17 +162,42 @@
         window.delMenu = (key) => { Swal.fire({ title: 'ยืนยัน?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ' }).then(res => { if(res.isConfirmed) remove(ref(db, 'menu/'+key)); }); }
 
         function renderDash() {
-            const div = document.getElementById('dash-tables'); const tables = [...new Set(ordersData.map(o=>o.table))];
+            const div = document.getElementById('dash-tables'); 
+            if (!div) return;
+        
+            const tables = [...new Set(ordersData.map(o => o.table))];
             div.innerHTML = tables.map(t => {
+                // เช็คการเรียกบิล
                 const isBilling = billsData.some(b => b.table == t);
-                return `<div class="table-card ${isBilling?'table-alert':''}" onclick="go('cashier'); selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p>${isBilling?'⚠️ เรียกเช็คบิล':'🍴 กำลังทาน'}</p></div>`;
+                const blinkClass = isBilling ? 'bill-request-blink' : '';
+        
+                return `
+                    <div class="table-card ${blinkClass}" onclick="go('cashier'); selectTable('${t}')">
+                        <h3>โต๊ะ ${t}</h3>
+                        <p>${isBilling ? '⚠️ เรียกเช็คบิล' : '🍴 กำลังทาน'}</p>
+                    </div>
+                `;
             }).join('') || '<p style="text-align:center; grid-column:1/-1">ไม่มีลูกค้า</p>';
         }
 
         function renderCashier() {
             const div = document.getElementById('cashier-tables');
-            const tables = [...new Set(ordersData.map(o=>o.table))];
-            div.innerHTML = tables.map(t => `<div class="table-card" onclick="selectTable('${t}')"><h3>โต๊ะ ${t}</h3><p style="font-size:0.8rem; color:#777">คลิกดูรายละเอียด</p></div>`).join('') || '<p style="text-align:center; grid-column:1/-1">ไม่มีโต๊ะค้างชำระ</p>';
+            if (!div) return;
+        
+            const tables = [...new Set(ordersData.map(o => o.table))];
+            
+            div.innerHTML = tables.map(t => {
+                // เช็คว่าโต๊ะนี้กดเรียกบิลมาหรือยัง (เช็คจาก billsData)
+                const isRequestingBill = billsData.some(b => b.table == t);
+                const blinkClass = isRequestingBill ? 'bill-request-blink' : '';
+        
+                return `
+                    <div class="table-card ${blinkClass}" onclick="selectTable('${t}')">
+                        <h3>โต๊ะ ${t}</h3>
+                        <p style="font-size:0.8rem; color:#777">คลิกดูรายละเอียด</p>
+                    </div>
+                `;
+            }).join('') || '<p style="text-align:center; grid-column:1/-1">ไม่มีโต๊ะค้างชำระ</p>';
         }
 
         window.selectTable = (t) => {
@@ -203,3 +252,4 @@
     </script>
 </body>
 </html>
+
