@@ -38,7 +38,7 @@
     </header>
 
     <div id="order-grid" class="grid">
-        <p style="text-align:center; width:100%; color:#555;">รอออเดอร์ใหม่...</p>
+        <p style="text-align:center; width:100%; color:#555;">กำลังเชื่อมต่อระบบ...</p>
     </div>
 
     <script type="module">
@@ -58,6 +58,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // เก็บข้อมูลออเดอร์ไว้ใช้งานในฟังก์ชัน serve
+        let currentOrders = [];
+
         // Listen for Bills (แจ้งเตือนเก็บเงิน)
         onValue(ref(db, 'bills'), s => {
             const data = s.val();
@@ -68,6 +71,7 @@
         // Listen for Orders
         onValue(ref(db, 'orders'), s => {
             const data = s.val() ? Object.entries(s.val()).map(([k,v])=>({firebaseKey:k, ...v})) : [];
+            currentOrders = data; // อัปเดตข้อมูล Global
             const activeOrders = data.filter(o => o.status !== 'served').sort((a,b) => a.id - b.id);
             renderOrders(activeOrders);
         });
@@ -102,8 +106,22 @@
             update(ref(db), upd);
         }
 
+        // ฟังก์ชันที่แก้ไขใหม่: เมื่อกดเสิร์ฟ จะทำให้ไอเทมย่อยเป็น Done ทั้งหมด
         window.serve = function(key) {
-            update(ref(db, 'orders/'+key), { status: 'served' });
+            const order = currentOrders.find(o => o.firebaseKey === key);
+            if (order && order.items) {
+                const updates = {};
+                // ตั้งค่าทุกรายการอาหารในออเดอร์นี้ให้เสร็จ (done = true)
+                order.items.forEach((item, idx) => {
+                    updates[`orders/${key}/items/${idx}/done`] = true;
+                });
+                // เปลี่ยนสถานะออเดอร์เป็นเสิร์ฟแล้ว
+                updates[`orders/${key}/status`] = 'served';
+                
+                update(ref(db), updates).then(() => {
+                    console.log("Order " + key + " served and all items marked done.");
+                });
+            }
         }
     </script>
 </body>
