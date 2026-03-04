@@ -8,70 +8,42 @@
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --text: #eee; --gold: #c5a47e; --green: #27ae60; --blue: #1a237e; }
         body { font-family: 'Prompt', sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
-        
         header { border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
         .bill-alert { background: #e67e22; color: #000; padding: 5px 15px; border-radius: 50px; font-weight: bold; animation: blink 1s infinite; }
         @keyframes blink { 50% {opacity: 0.5} }
-
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background: var(--card); border-radius: 12px; border: 1px solid #333; display: flex; flex-direction: column; overflow: hidden; }
         .card.all-done { border: 2px solid var(--green); }
-        
         .card-head { background: var(--blue); padding: 12px; display: flex; justify-content: space-between; font-weight: bold; }
         .card-body { padding: 15px; flex: 1; }
-        
         .item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; cursor: pointer; }
         .item.done { color: #555; text-decoration: line-through; }
-        
         .check { width: 22px; height: 22px; border: 2px solid #555; border-radius: 5px; margin-right: 10px; display: flex; align-items: center; justify-content: center; }
         .item.done .check { background: var(--green); border-color: var(--green); }
         .item.done .check::after { content: '✓'; color: white; }
-
         .btn-serve { background: var(--green); color: white; border: none; padding: 15px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem; }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1 style="color:var(--gold); margin:0;">👨‍🍳 KITCHEN STATION</h1>
-        <div id="bill-alerts" style="display:flex; gap:10px;"></div>
-    </header>
-
-    <div id="order-grid" class="grid">
-        <p style="text-align:center; width:100%; color:#555;">กำลังเชื่อมต่อระบบ...</p>
-    </div>
+    <header><h1 style="color:var(--gold); margin:0;">👨‍🍳 KITCHEN STATION</h1><div id="bill-alerts" style="display:flex; gap:10px;"></div></header>
+    <div id="order-grid" class="grid"><p style="text-align:center; width:100%; color:#555;">กำลังเชื่อมต่อระบบ...</p></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDk4aCo5QjHesgZEfdUJ8aoSTMQv7W5vUQ",
-            authDomain: "restaurant-menu-af41d.firebaseapp.com",
-            databaseURL: "https://restaurant-menu-af41d-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "restaurant-menu-af41d",
-            storageBucket: "restaurant-menu-af41d.firebasestorage.app",
-            messagingSenderId: "110746441918",
-            appId: "1:110746441918:web:5bc38b6b758b488d9f66ef"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyDk4aCo5QjHesgZEfdUJ8aoSTMQv7W5vUQ", authDomain: "restaurant-menu-af41d.firebaseapp.com", databaseURL: "https://restaurant-menu-af41d-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "restaurant-menu-af41d", storageBucket: "restaurant-menu-af41d.firebasestorage.app", messagingSenderId: "110746441918", appId: "1:110746441918:web:5bc38b6b758b488d9f66ef" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
-        // เก็บข้อมูลออเดอร์ไว้ใช้งานในฟังก์ชัน serve
         let currentOrders = [];
 
-        // Listen for Bills (แจ้งเตือนเก็บเงิน)
         onValue(ref(db, 'bills'), s => {
-            const data = s.val();
-            const div = document.getElementById('bill-alerts');
+            const data = s.val(); const div = document.getElementById('bill-alerts');
             div.innerHTML = data ? Object.values(data).map(b => `<div class="bill-alert">💰 โต๊ะ ${b.table} เช็คบิล</div>`).join('') : '';
         });
 
-        // Listen for Orders
         onValue(ref(db, 'orders'), s => {
             const data = s.val() ? Object.entries(s.val()).map(([k,v])=>({firebaseKey:k, ...v})) : [];
-            currentOrders = data; // อัปเดตข้อมูล Global
+            currentOrders = data;
             const activeOrders = data.filter(o => o.status !== 'served').sort((a,b) => a.id - b.id);
             renderOrders(activeOrders);
         });
@@ -79,51 +51,31 @@
         function renderOrders(orders) {
             const grid = document.getElementById('order-grid');
             if(orders.length === 0) { grid.innerHTML = '<p style="text-align:center; width:100%; color:#555;">ไม่มีออเดอร์ค้าง</p>'; return; }
-
             grid.innerHTML = orders.map(o => {
-                const items = o.items || [];
-                const allDone = items.every(i => i.done);
-                return `
-                    <div class="card ${allDone ? 'all-done' : ''}">
-                        <div class="card-head"><span>โต๊ะ ${o.table}</span><span>${o.timestamp}</span></div>
-                        <div class="card-body">
-                            ${items.map((item, idx) => `
-                                <div class="item ${item.done?'done':''}" onclick="toggleItem('${o.firebaseKey}', ${idx}, ${!item.done})">
-                                    <div style="display:flex;align-items:center;"><div class="check"></div>${item.name}</div>
-                                    <span>x1</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        ${allDone ? `<button class="btn-serve" onclick="serve('${o.firebaseKey}')">🚀 อาหารครบ</button>` : ''}
+                const items = o.items || []; const allDone = items.every(i => i.done);
+                return `<div class="card ${allDone ? 'all-done' : ''}">
+                    <div class="card-head"><span>โต๊ะ ${o.table}</span><span>${o.timestamp}</span></div>
+                    <div class="card-body">
+                        ${items.map((item, idx) => `<div class="item ${item.done?'done':''}" onclick="toggleItem('${o.firebaseKey}', ${idx}, ${!item.done})"><div style="display:flex;align-items:center;"><div class="check"></div>${item.name}</div><span>x1</span></div>`).join('')}
                     </div>
-                `;
+                    ${allDone ? `<button class="btn-serve" onclick="serve('${o.firebaseKey}')">🚀 อาหารครบ</button>` : ''}
+                </div>`;
             }).join('');
         }
 
         window.toggleItem = function(key, idx, status) {
-            const upd = {};
-            upd[`orders/${key}/items/${idx}/done`] = status;
-            update(ref(db), upd);
+            const upd = {}; upd[`orders/${key}/items/${idx}/done`] = status; update(ref(db), upd);
         }
 
-        // ฟังก์ชันที่แก้ไขใหม่: เมื่อกดเสิร์ฟ จะทำให้ไอเทมย่อยเป็น Done ทั้งหมด
         window.serve = function(key) {
             const order = currentOrders.find(o => o.firebaseKey === key);
             if (order && order.items) {
                 const updates = {};
-                // ตั้งค่าทุกรายการอาหารในออเดอร์นี้ให้เสร็จ (done = true)
-                order.items.forEach((item, idx) => {
-                    updates[`orders/${key}/items/${idx}/done`] = true;
-                });
-                // เปลี่ยนสถานะออเดอร์เป็นเสิร์ฟแล้ว
+                order.items.forEach((item, idx) => { updates[`orders/${key}/items/${idx}/done`] = true; });
                 updates[`orders/${key}/status`] = 'served';
-                
-                update(ref(db), updates).then(() => {
-                    console.log("Order " + key + " served and all items marked done.");
-                });
+                update(ref(db), updates);
             }
         }
     </script>
 </body>
 </html>
-
