@@ -15,26 +15,22 @@
             --max-width: 1200px;
         }
         body { font-family: 'Prompt', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #333; }
-        
         header { background: var(--white); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 99; }
         .header-content { max-width: var(--max-width); margin: 0 auto; padding: 15px 20px; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .brand { display: flex; align-items: center; gap: 10px; }
         h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
         .badge-table { background: var(--primary); color: var(--gold); padding: 5px 15px; border-radius: 50px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; }
-
         .nav-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: var(--primary); display: flex; justify-content: space-between; padding: 12px 30px; border-radius: 50px; box-shadow: 0 10px 25px rgba(26,35,126,0.3); z-index: 100; transition: all 0.3s ease; }
         .nav-item { color: rgba(255,255,255,0.6); font-size: 1.4rem; position: relative; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .nav-item:hover, .nav-item.active { color: var(--gold); }
         .nav-text { display: none; font-size: 1rem; font-weight: 500; }
         .badge-cart { position: absolute; top: -5px; right: -8px; background: var(--gold); color: var(--primary); font-size: 0.75rem; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid var(--primary); }
-
         .cat-wrapper { max-width: var(--max-width); margin: 0 auto; overflow: hidden; }
         .cat-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
         .cat-scroll::-webkit-scrollbar { display: none; }
         .cat-btn { background: #f0f0f0; border: none; padding: 8px 20px; border-radius: 50px; color: #777; white-space: nowrap; cursor: pointer; transition: 0.3s; font-size: 0.95rem; }
         .cat-btn.active { background: var(--primary); color: var(--white); box-shadow: 0 4px 10px rgba(26,35,126,0.2); }
-
         .container { max-width: var(--max-width); margin: 0 auto; padding: 20px; }
         .grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
         .card { background: var(--white); padding: 12px; border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; cursor: pointer; position: relative; }
@@ -43,16 +39,13 @@
         .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .price { color: var(--primary); font-weight: bold; font-size: 1.1rem; }
         .btn-add { background: #f0f0f0; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); transition: 0.3s; }
-
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:200; display:none; align-items:flex-end; justify-content: center; }
         .modal-content { background:white; width:100%; border-radius: 25px 25px 0 0; padding: 25px; max-height: 80vh; overflow-y: auto; animation: slideUp 0.3s; }
         @keyframes slideUp { from {transform:translateY(100%)} to {transform:translateY(0)} }
-        
         .btn-main { background: var(--primary); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; margin-top: 15px; cursor: pointer; }
         .cart-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .cart-info { display: flex; align-items: center; gap: 10px; }
         .item-img-sm { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
-
         @media (min-width: 1024px) {
             body { padding-bottom: 0; }
             .header-content { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "brand nav badge" "cat cat cat"; align-items: center; gap: 20px; }
@@ -65,13 +58,10 @@
             .grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
             .modal { align-items: center; } .modal-content { width: 450px; border-radius: 20px; }
         }
-
-        /* SweetAlert Custom Style */
         .swal2-popup { font-family: 'Prompt', sans-serif !important; border-radius: 20px !important; }
     </style>
 </head>
 <body>
-
     <header>
         <div class="header-content">
             <div class="top-bar">
@@ -81,7 +71,6 @@
                 </div>
                 <div class="badge-table">โต๊ะ <span id="table-no">-</span></div>
             </div>
-
             <div class="nav-bar">
                 <div class="nav-item active" onclick="closeModals()">
                     <i class="fa-solid fa-house"></i> <span class="nav-text">หน้าหลัก</span>
@@ -100,7 +89,6 @@
                     <i class="fa-solid fa-bell-concierge"></i> <span class="nav-text">เรียกบิล</span>
                 </div>
             </div>
-
             <div class="cat-wrapper">
                 <div class="cat-scroll" id="cat-list"></div>
             </div>
@@ -139,7 +127,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyDk4aCo5QjHesgZEfdUJ8aoSTMQv7W5vUQ",
             authDomain: "restaurant-menu-af41d.firebaseapp.com",
@@ -152,39 +139,30 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
         const urlParams = new URLSearchParams(window.location.search);
         const tableId = urlParams.get('table') || '1';
         document.getElementById('table-no').innerText = tableId;
 
-        let menuData = [];
-        let cart = [];
-        let category = 'ทั้งหมด';
-        let ordersData = [];
+        let menuData = [], cart = [], category = 'ทั้งหมด', ordersData = [];
 
-        // Load Menu
         onValue(ref(db, 'menu'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 menuData = Object.entries(data).map(([key, val]) => ({ firebaseKey: key, ...val }));
-                renderCat();
-                renderMenu();
+                renderCat(); renderMenu();
             }
         });
 
-        // Load Orders
         onValue(ref(db, 'orders'), (snapshot) => {
             const data = snapshot.val();
             ordersData = data ? Object.values(data) : [];
+            if(document.getElementById('hist-modal').style.display === 'flex') window.openHistory();
         });
 
         function renderCat() {
             const cats = ['ทั้งหมด', ...new Set(menuData.map(m => m.category || 'อื่นๆ'))];
-            document.getElementById('cat-list').innerHTML = cats.map(c => 
-                `<button class="cat-btn ${c===category?'active':''}" onclick="setCat('${c}')">${c}</button>`
-            ).join('');
+            document.getElementById('cat-list').innerHTML = cats.map(c => `<button class="cat-btn ${c===category?'active':''}" onclick="setCat('${c}')">${c}</button>`).join('');
         }
-
         window.setCat = (c) => { category = c; renderCat(); renderMenu(); };
 
         function renderMenu() {
@@ -204,35 +182,12 @@
         window.addToCart = (key) => {
             const item = menuData.find(m => m.firebaseKey === key);
             if(item) {
-                cart.push(item);
+                cart.push({...item, done: false});
                 document.getElementById('cart-count').innerText = cart.length;
-        
-                // --- Mini Popup (Toast) ---
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end', // เด้งที่มุมขวาบน
-                    showConfirmButton: false, // ไม่ต้องมีปุ่มกด
-                    timer: 1500, // แสดง 1.5 วินาทีแล้วหายไปเอง
-                    timerProgressBar: true, // มีแถบเวลาวิ่งด้านล่าง
-                    didOpen: (toast) => {
-                        toast.addEventListener('mouseenter', Swal.stopTimer)
-                        toast.addEventListener('mouseleave', Swal.resumeTimer)
-                    }
-                });
-        
-                Toast.fire({
-                    icon: 'success',
-                    title: `เพิ่ม ${item.name} ลงตะกร้าแล้ว`,
-                    background: '#ffffff',
-                    color: '#1a237e',
-                    iconColor: '#27ae60'
-                });
-                // -------------------------
-        
-                // เพิ่ม Animation เล็กๆ ให้ที่ไอคอนตะกร้า
+                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500, timerProgressBar: true });
+                Toast.fire({ icon: 'success', title: `เพิ่ม ${item.name} แล้ว`, background: '#fff', color: '#1a237e', iconColor: '#27ae60' });
                 const badge = document.getElementById('cart-count');
-                badge.style.transform = 'scale(1.5)';
-                setTimeout(() => badge.style.transform = 'scale(1)', 200);
+                badge.style.transform = 'scale(1.5)'; setTimeout(() => badge.style.transform = 'scale(1)', 200);
             }
         };
 
@@ -240,57 +195,26 @@
             document.getElementById('cart-modal').style.display = 'flex';
             const list = document.getElementById('cart-list-container');
             if(cart.length===0) { list.innerHTML = '<p style="text-align:center;color:#999; padding:20px;">ตะกร้าว่างเปล่า</p>'; return; }
-            
             let total = 0;
             list.innerHTML = cart.map((item, i) => {
                 total += parseInt(item.price);
                 return `<div class="cart-row">
-                    <div class="cart-info">
-                        <img src="${item.img || 'https://via.placeholder.com/50'}" class="item-img-sm">
-                        <span>${item.name}</span>
-                    </div>
-                    <div style="display:flex; gap:15px; align-items:center;">
-                        <b>${item.price}</b>
-                        <i class="fa-solid fa-trash" style="color:#e74c3c; cursor:pointer;" onclick="removeFromCart(${i})"></i>
-                    </div>
+                    <div class="cart-info"><img src="${item.img || 'https://via.placeholder.com/50'}" class="item-img-sm"><span>${item.name}</span></div>
+                    <div style="display:flex; gap:15px; align-items:center;"><b>${item.price}</b><i class="fa-solid fa-trash" style="color:#e74c3c; cursor:pointer;" onclick="removeFromCart(${i})"></i></div>
                 </div>`;
             }).join('');
             document.getElementById('cart-total').innerText = total.toLocaleString();
         };
 
-        window.removeFromCart = (index) => {
-            cart.splice(index, 1);
-            document.getElementById('cart-count').innerText = cart.length;
-            openCart();
-        };
+        window.removeFromCart = (index) => { cart.splice(index, 1); document.getElementById('cart-count').innerText = cart.length; openCart(); };
 
         window.confirmOrder = () => {
             if(cart.length === 0) return Swal.fire('ตะกร้าว่าง', 'กรุณาเลือกอาหารก่อนสั่งครับ', 'info');
-
-            Swal.fire({
-                title: 'ยืนยันออเดอร์?',
-                text: "ออเดอร์จะถูกส่งไปยังห้องครัว",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#1a237e',
-                confirmButtonText: 'ยืนยันการสั่ง',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
+            Swal.fire({ title: 'ยืนยันออเดอร์?', text: "ออเดอร์จะถูกส่งไปยังห้องครัว", icon: 'question', showCancelButton: true, confirmButtonColor: '#1a237e', confirmButtonText: 'ยืนยันการสั่ง', cancelButtonText: 'ยกเลิก' }).then((result) => {
                 if (result.isConfirmed) {
                     const total = document.getElementById('cart-total').innerText.replace(/,/g,'');
-                    const newOrder = {
-                        id: Date.now(),
-                        table: tableId,
-                        items: cart,
-                        total: total,
-                        timestamp: new Date().toLocaleTimeString(),
-                        status: 'pending'
-                    };
-
-                    push(ref(db, 'orders'), newOrder).then(() => {
-                        cart = [];
-                        document.getElementById('cart-count').innerText = 0;
-                        window.closeModals();
+                    push(ref(db, 'orders'), { id: Date.now(), table: tableId, items: cart, total: total, timestamp: new Date().toLocaleTimeString(), status: 'pending' }).then(() => {
+                        cart = []; document.getElementById('cart-count').innerText = 0; window.closeModals();
                         Swal.fire('สำเร็จ!', 'ครัวได้รับออเดอร์แล้วครับ', 'success');
                     });
                 }
@@ -302,15 +226,11 @@
             const myOrders = ordersData.filter(o => o.table == tableId).reverse();
             document.getElementById('hist-list').innerHTML = myOrders.map(o => `
                 <div style="background:#f9f9f9; padding:15px; border-radius:12px; margin-bottom:12px; border:1px solid #eee;">
-                    <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--primary)">
-                        <span>🕒 ${o.timestamp}</span><span>${parseInt(o.total).toLocaleString()} ฿</span>
-                    </div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--primary)"><span>🕒 ${o.timestamp}</span><span>${parseInt(o.total).toLocaleString()} ฿</span></div>
                     <div style="color:#555; font-size:0.85rem; margin-top:8px;">
-                        ${(o.items || []).map(i => `<div>• ${i.name}</div>`).join('')}
+                        ${(o.items || []).map(i => `<div>${i.done ? '✅' : '⏳'} ${i.name}</div>`).join('')}
                     </div>
-                    <div style="text-align:right; font-size:0.8rem; margin-top:8px; font-weight:bold; color:${o.status==='served'?'#27ae60':'#f39c12'}">
-                        ${o.status==='served' ? '🚀 เสิร์ฟแล้ว' : '👨‍🍳 กำลังปรุง'}
-                    </div>
+                    <div style="text-align:right; font-size:0.8rem; margin-top:8px; font-weight:bold; color:${o.status==='served'?'#27ae60':'#f39c12'}">${o.status==='served' ? '🚀 เสิร์ฟครบแล้ว' : '👨‍🍳 กำลังปรุง'}</div>
                 </div>
             `).join('') || '<p style="text-align:center; color:#999; padding:20px;">ไม่มีประวัติการสั่ง</p>';
         };
@@ -318,31 +238,12 @@
         window.callBill = () => {
             const myOrders = ordersData.filter(o => o.table == tableId);
             if(myOrders.length === 0) return Swal.fire('ขออภัย', 'ยังไม่มีรายการอาหารที่สั่งครับ', 'info');
-            
             const total = myOrders.reduce((sum, o) => sum + parseInt(o.total), 0);
-            Swal.fire({
-                title: 'เรียกเช็คบิล',
-                html: `ยอดรวมทั้งหมด <b>${total.toLocaleString()} บาท</b><br>ยืนยันให้พนักงานมาเก็บเงิน?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#c5a47e',
-                confirmButtonText: 'เรียกพนักงาน',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    push(ref(db, 'bills'), { 
-                        table: tableId, 
-                        total: total, 
-                        timestamp: new Date().toLocaleTimeString() 
-                    }).then(() => Swal.fire('เรียบร้อย', 'พนักงานกำลังดำเนินการครับ', 'success'));
-                }
+            Swal.fire({ title: 'เรียกเช็คบิล', html: `ยอดรวมทั้งหมด <b>${total.toLocaleString()} บาท</b><br>ยืนยันให้พนักงานมาเก็บเงิน?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#c5a47e', confirmButtonText: 'เรียกพนักงาน', cancelButtonText: 'ยกเลิก' }).then((result) => {
+                if (result.isConfirmed) { push(ref(db, 'bills'), { table: tableId, total: total, timestamp: new Date().toLocaleTimeString() }).then(() => Swal.fire('เรียบร้อย', 'พนักงานกำลังดำเนินการครับ', 'success')); }
             });
         };
-
-        window.closeModals = () => {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        };
+        window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
     </script>
 </body>
 </html>
-
